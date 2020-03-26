@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{550CE75B-BDF5-4DDD-B063-5617F06B18FD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CustomShrines</RootNamespace>
+    <AssemblyName>CustomShrines</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\CustomCharacters\CustomCharacters\bin\Debug\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp.Base.mm">
+      <HintPath>..\..\CustomCharacters\CustomCharacters\bin\Debug\Assembly-CSharp.Base.mm.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.RuntimeDetour">
+      <HintPath>..\..\Semi\Semi\Semi\bin\Debug\MonoMod.RuntimeDetour.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoMod.Utils">
+      <HintPath>..\..\Semi\Semi\Semi\bin\Debug\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="PlayMaker">
+      <HintPath>..\..\CustomCharacters\CustomCharacters\bin\Debug\PlayMaker.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\Semi\Semi\Semi\bin\Debug\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\Semi\Semi\Semi\bin\Debug\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>..\..\Semi\Semi\Semi\bin\Debug\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>D:\SteamLibrary\steamapps\common\Enter the Gungeon\EtG_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\..\Semi\Semi\Semi\bin\Debug\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="dungeongen\DungeonHooks.cs" />
+    <Compile Include="dungeongen\OfficialFlows.cs" />
+    <Compile Include="dungeongen\RoomFactory.cs" />
+    <Compile Include="dungeongen\SampleFlow.cs" />
+    <Compile Include="GungeonAPI.cs" />
+    <Compile Include="shrines\HitboxMonitor.cs" />
+    <Compile Include="shrines\ShrineFactory.cs" />
+    <Compile Include="shrines\SimpleInteractable.cs" />
+    <Compile Include="tools\FakePrefab.cs" />
+    <Compile Include="tools\FakePrefabHooks.cs" />
+    <Compile Include="tools\ResourceExtractor.cs" />
+    <Compile Include="ExampleShrineModule.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="dungeongen\DungeonHandler.cs" />
+    <Compile Include="tools\SpriteBuilder.cs" />
+    <Compile Include="tools\TextureStitcher.cs" />
+    <Compile Include="tools\Tools.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\gun_shrine_foyer_001.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\shrine_ammo_001.png" />
+    <EmbeddedResource Include="resource\shrine_Artemissile_001.png" />
+    <EmbeddedResource Include="resource\shrine_blank_001.png" />
+    <EmbeddedResource Include="resource\shrine_blood_blood_001.png" />
+    <EmbeddedResource Include="resource\shrine_Dagun_001.png" />
+    <EmbeddedResource Include="resource\shrine_death_001.png" />
+    <EmbeddedResource Include="resource\shrine_eyeless_001.png" />
+    <EmbeddedResource Include="resource\shrine_hero_001.png" />
+    <EmbeddedResource Include="resource\shrine_lead_001.png" />
+    <EmbeddedResource Include="resource\shrine_Loadin_001.png" />
+    <EmbeddedResource Include="resource\shrine_LordofJammed_001.png" />
+    <EmbeddedResource Include="resource\shrine_no_gun_001.png" />
+    <EmbeddedResource Include="resource\shrine_peace_001.png" />
+    <EmbeddedResource Include="resource\shrine_shield_heart_001.png" />
+    <EmbeddedResource Include="resource\shrine_snakechamber_001.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\test_room.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\test_room_empty.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\test_room.room" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\test_room_empty.room" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\jaws.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\jaws.room" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\diag.room" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\diag.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\giant_diag.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\giant_diag.room" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\LINE.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\LINE.room" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\maze.room" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
