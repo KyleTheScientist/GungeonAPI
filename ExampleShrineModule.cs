@@ -8,6 +8,8 @@ namespace GungeonAPI
 {
     public class ExampleShrineModule : ETGModule
     {
+        public static readonly string VERSION = "Beta 0.3";
+
         public override void Exit()
         {
         }
@@ -87,7 +89,7 @@ namespace GungeonAPI
                     }
                 });
 
-                Tools.Print("GungeonAPI 0.2 loaded.", "FF00FF", true);
+                Tools.Print($"GungeonAPI {VERSION} loaded.", "FF00FF", true);
             }
             catch (Exception e)
             {

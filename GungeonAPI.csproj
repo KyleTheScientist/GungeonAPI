@@ -7,8 +7,8 @@
     <ProjectGuid>{550CE75B-BDF5-4DDD-B063-5617F06B18FD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CustomShrines</RootNamespace>
-    <AssemblyName>CustomShrines</AssemblyName>
+    <RootNamespace>GungeonAPI</RootNamespace>
+    <AssemblyName>GungeonAPI</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -108,43 +108,10 @@
     <EmbeddedResource Include="resource\shrine_snakechamber_001.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\test_room.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\test_room_empty.png" />
+    <EmbeddedResource Include="resource\rooms\maze.room" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="resource\rooms\test_room.room" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\test_room_empty.room" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\jaws.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\jaws.room" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\diag.room" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\diag.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\giant_diag.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\giant_diag.room" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\LINE.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\LINE.room" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\maze.room" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

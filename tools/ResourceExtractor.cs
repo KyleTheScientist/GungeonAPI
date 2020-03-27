@@ -13,7 +13,7 @@ namespace GungeonAPI
     public static class ResourceExtractor
     {
         private static string spritesDirectory = Path.Combine(ETGMod.ResourcesDirectory, "sprites");
-        private static string nameSpace = "CustomShrines";
+        private static string nameSpace = "GungeonAPI";
         /// <summary>
         /// Converts all png's in a folder to a list of Texture2D objects
         /// </summary>
@@ -123,7 +123,6 @@ namespace GungeonAPI
         {
             filePath = filePath.Replace("/", ".");
             filePath = filePath.Replace("\\", ".");
-            Tools.Print($"{nameSpace}." + filePath);
             var baseAssembly = Assembly.GetCallingAssembly();
             using (Stream resFilestream = baseAssembly.GetManifestResourceStream($"{nameSpace}." + filePath))
             {

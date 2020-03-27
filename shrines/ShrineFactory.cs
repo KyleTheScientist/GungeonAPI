@@ -121,6 +121,7 @@ namespace GungeonAPI
                 }
 
                 var prefab = FakePrefab.Clone(shrine);
+                prefab.GetComponent<CustomShrineData>().Copy(data);
                 builtShrines.Add(ID, prefab);
                 Tools.Print("Added shrine: " + ID);
                 return shrine;
@@ -140,16 +141,17 @@ namespace GungeonAPI
             {
                 try
                 {
-                    if (!prefab.GetComponent<CustomShrineData>().isBreachShrine) continue;
+                    var prefabShrineData = prefab.GetComponent<CustomShrineData>();
+                    if (!prefabShrineData.isBreachShrine) continue;
+
                     Tools.Print($"    {prefab.name}");
                     var shrine = GameObject.Instantiate(prefab).GetComponent<CustomShrineData>();
+                    shrine.Copy(prefabShrineData);
                     shrine.gameObject.SetActive(true);
                     shrine.sprite.PlaceAtPositionByAnchor(shrine.offset, tk2dBaseSprite.Anchor.LowerCenter);
                     var interactable = shrine.GetComponent<IPlayerInteractable>();
                     if (interactable is SimpleInteractable)
                     {
-                        Tools.Print(shrine.OnAccept);
-                        Tools.Print(shrine.OnDecline);
                         ((SimpleInteractable)interactable).OnAccept = shrine.OnAccept;
                         ((SimpleInteractable)interactable).OnDecline = shrine.OnDecline;
                     }
@@ -175,6 +177,18 @@ namespace GungeonAPI
             public Action<PlayerController>
                 OnAccept,
                 OnDecline;
+
+            public void Copy(CustomShrineData other)
+            {
+                this.ID = other.ID;
+                this.roomStyles = other.roomStyles;
+                this.isBreachShrine = other.isBreachShrine;
+                this.offset = other.offset;
+                this.pixelColliders = other.pixelColliders;
+                this.factory = other.factory;
+                this.OnAccept = other.OnAccept;
+                this.OnDecline = other.OnDecline;
+            }
         }
     }
 }

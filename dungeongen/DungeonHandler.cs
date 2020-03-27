@@ -70,13 +70,13 @@ namespace GungeonAPI
             {
                 //flow = SampleFlow.CreateRoomTypeSampleFlow(dungeon);
                 //flow = SampleFlow.CreateMazeFlow(dungeon);
-                //flow = SampleFlow.CreateEntranceExitFlow(dungeon);
-                //generator.AssignFlow(flow);
+                flow = SampleFlow.CreateEntranceExitFlow(dungeon);
+                generator.AssignFlow(flow);
                 Tools.Print("Dungeon name: " + dungeon.name);
 
-                //var hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() };
-                //flow.AddNodeToFlow(hub, flow.FirstNode);
-                //flow.AddNodeToFlow(new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.Build("resource/rooms/diag.png") }, hub);
+                var hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() };
+                flow.AddNodeToFlow(hub, flow.FirstNode);
+                flow.AddNodeToFlow(new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.Build("resource/rooms/test_room.room") }, hub);
                 ////foreach (var shrineID in registeredShrineRooms.Keys)
                 //{
                 //    //registeredShrineRooms[shrineID].overrideRoomVisualType = RoomFactory.GetStyleValue(dungeon.name, shrineID);

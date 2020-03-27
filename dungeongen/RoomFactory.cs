@@ -45,7 +45,7 @@ namespace GungeonAPI
             {
                 for (int i = 0; i < roomData.exitPositions.Length; i++)
                 {
-                    DungeonData.Direction dir = (DungeonData.Direction)Enum.Parse(typeof(DungeonData.Direction), roomData.exitDirections[i]);
+                    DungeonData.Direction dir = (DungeonData.Direction)Enum.Parse(typeof(DungeonData.Direction), roomData.exitDirections[i].ToUpper());
                     AddExit(room, roomData.exitPositions[i], dir);
                 }
             }
@@ -62,7 +62,7 @@ namespace GungeonAPI
             {
                 for (int i = 0; i < roomData.enemyPositions.Length; i++)
                 {
-                    AddEnemyToRoom(room, roomData.enemyPositions[i], "6b7ef9e5d05b4f96b04f05ef4a0d1b18", 0);
+                    AddEnemyToRoom(room, roomData.enemyPositions[i], roomData.enemyGUIDs[i], roomData.enemyReinforcementLayers[i]);
                 }
             }
         }
@@ -99,6 +99,8 @@ namespace GungeonAPI
 
         public static PrototypeDungeonRoomCellData CellDataFromColor(Color32 color)
         {
+            if (color.Equals(Color.magenta)) return null;
+
             var data = new PrototypeDungeonRoomCellData();
             data.state = TypeFromColor(color);
             data.diagonalWallType = DiagonalWallTypeFromColor(color);
@@ -127,7 +129,7 @@ namespace GungeonAPI
                 return DiagonalWallType.SOUTHEAST;
             else if (color == Color.blue)
                 return DiagonalWallType.SOUTHWEST;
-            else if (color == Color.magenta)
+            else if (color == Color.yellow)
                 return DiagonalWallType.NORTHWEST;
             else
                 return DiagonalWallType.NONE;

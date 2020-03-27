@@ -12,7 +12,7 @@ namespace GungeonAPI
             Tools.Init();
             FakePrefabHooks.Init();
             ShrineFactory.Init();
-            //DungeonHandler.Init();
+            DungeonHandler.Init();
         }
     }
 }
