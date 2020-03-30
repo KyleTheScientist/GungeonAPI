@@ -111,10 +111,11 @@
     <EmbeddedResource Include="resource\rooms\maze.room" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\test_room.room" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\kill_me.room" />
+    <EmbeddedResource Include="resource\rooms\JunkRoom.room" />
+    <EmbeddedResource Include="resource\rooms\Pitts.room" />
+    <EmbeddedResource Include="resource\rooms\SmileyRooms.room" />
+    <EmbeddedResource Include="resource\rooms\Tiny.room" />
+    <EmbeddedResource Include="resource\rooms\Yes.room" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
