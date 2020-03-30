@@ -25,37 +25,40 @@ namespace GungeonAPI
                 GungeonAPI.Init();
 
                 //not mandatory
-                Dictionary<string, int> styles = new Dictionary<string, int>()
-                {
-                    { "Base_Castle", 4 },
-                    { "Base_Gungeon", 7 },
-                    { "Base_Mines", 5 },
-                    { "Base_Catacombs", 4 },
-                    { "Base_Forge", 3 },
-                    { "Base_Sewer", 4 },
-                    { "Base_Cathedral ", 0 },
-                    { "Base_BulletHell", 1 },
-                };
+                //Dictionary<string, int> styles = new Dictionary<string, int>()
+                //{
+                //    { "Base_Castle", 4 },
+                //    { "Base_Gungeon", 7 },
+                //    { "Base_Mines", 5 },
+                //    { "Base_Catacombs", 4 },
+                //    { "Base_Forge", 3 },
+                //    { "Base_Sewer", 4 },
+                //    { "Base_Cathedral ", 0 },
+                //    { "Base_BulletHell", 1 },
+                //};
 
                 //define shrine
                 ShrineFactory sf = new ShrineFactory()
                 {
                     name = "SpinShrine",
+                    spritePath = "resource/shrine_no_gun_001.png",
                     text = "Spin to win?",
                     acceptText = "Accept",
                     declineText = "Decline",
-                    spritePath = "resource/shrine_no_gun_001.png",
                     OnAccept = (p) => { Tools.Print("Accept"); },
                     OnDecline = (p) => { Tools.Print("Decline"); },
-                    offset = new Vector3(43.8f, 42.4f, 42.9f),
+                    //offset = new Vector3(43.8f, 42.4f, 42.9f),
+                    offset = new Vector3(10, 0, 0),
                     talkPointOffset = new Vector3(0, 3, 0),
                     isToggle = true,
                     modID="kts",
-                    roomStyles = styles,
+                    //roomStyles = styles,
+                    room = RoomFactory.BuildFromResource("resource/rooms/ShrineRoom.room")
                 };
                 //register shrine
                 sf.Build();
 
+                //Enable the debug flow
                 ETGModConsole.Commands.AddUnit("debugflow", (args) =>
                 {
                     DungeonHandler.debugFlow = !DungeonHandler.debugFlow;

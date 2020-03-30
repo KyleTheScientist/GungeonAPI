@@ -11,6 +11,27 @@ namespace GungeonAPI
 {
     public static class SampleFlow
     {
+        public static DungeonFlow CreateDebugFlow(Dungeon dungeon)
+        {
+            var flow = SampleFlow.CreateEntranceExitFlow(dungeon);
+            flow.name = "debug_flow";
+            DungeonFlowNode
+                customRoom,
+                hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() },
+                lastNode = hub;
+            flow.AddNodeToFlow(hub, flow.FirstNode);
+            foreach (var room in RoomFactory.rooms.Values)
+            {
+                customRoom = new DungeonFlowNode(flow) { overrideExactRoom = room };
+                flow.AddNodeToFlow(customRoom, lastNode);
+                hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() };
+                flow.AddNodeToFlow(hub, customRoom);
+                lastNode = hub;
+            }
+            dungeon = null;
+            return flow;
+        }
+
         public static DungeonFlow CreateRoomTypeSampleFlow(Dungeon dungeon)
         {
             var flow = CreateNewFlow(dungeon);

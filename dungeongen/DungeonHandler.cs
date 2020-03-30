@@ -13,111 +13,74 @@ namespace GungeonAPI
     public static class DungeonHandler
     {
         private static bool initialized = false;
-        private static readonly int roomWidth = 14, roomHeight = 14;
-        private static Dictionary<string, PrototypeDungeonRoom> registeredShrineRooms = new Dictionary<string, PrototypeDungeonRoom>();
         public static bool debugFlow = false;
 
         public static void Init()
         {
             if (!initialized)
             {
-                RoomFactory.LoadRoomsFromRoomDirectory();
+                //RoomFactory.LoadRoomsFromRoomDirectory();
                 DungeonHooks.OnPreDungeonGeneration += OnPreDungeonGen;
                 DungeonHooks.OnPostDungeonGeneration += OnPostDungeonGen;
                 initialized = true;
             }
         }
 
-        public static void RegisterDefaultShrineRoom(GameObject shrine, string ID, Vector2 offset)
-        {
-            Vector2 position = new Vector2(roomWidth / 2 + offset.x, roomHeight / 2 + offset.y);
-
-            var protoroom = RoomFactory.CreateEmptyRoom(roomWidth, roomHeight);
-            protoroom.placedObjectPositions.Add(position);
-            protoroom.category = PrototypeDungeonRoom.RoomCategory.SPECIAL;
-            protoroom.subCategorySpecial = PrototypeDungeonRoom.RoomSpecialSubCategory.UNSPECIFIED_SPECIAL;
-
-            DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
-            protoroom.placedObjects.Add(new PrototypePlacedObjectData()
-            {
-                contentsBasePosition = position,
-                fieldData = new List<PrototypePlacedObjectFieldData>(),
-                instancePrerequisites = emptyReqs,
-                linkedTriggerAreaIDs = new List<int>(),
-                placeableContents = new DungeonPlaceable()
-                {
-                    width = 2,
-                    height = 2,
-                    respectsEncounterableDifferentiator = true,
-                    variantTiers = new List<DungeonPlaceableVariant>()
-                    {
-                        new DungeonPlaceableVariant()
-                        {
-                            percentChance = 1,
-                            nonDatabasePlaceable = shrine,
-                            prerequisites = emptyReqs,
-                            materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
-                        }
-                    }
-                }
-            });
-            registeredShrineRooms.Add(ID, protoroom);
-        }
-
         public static void OnPreDungeonGen(LoopDungeonGenerator generator, Dungeon dungeon, DungeonFlow flow, int dungeonSeed)
         {
             Tools.Print("Attempting to override floor layout...", "5599FF");
-            CollectDataForAnalysis(flow, dungeon);
+            //CollectDataForAnalysis(flow, dungeon);
             if (flow.name != "Foyer Flow" && !GameManager.IsReturningToFoyerWithPlayer)
             {
                 if (debugFlow)
                 {
-                    flow = SampleFlow.CreateEntranceExitFlow(dungeon);
+                    flow = SampleFlow.CreateDebugFlow(dungeon);
                     generator.AssignFlow(flow);
-                    Tools.Print("Dungeon name: " + dungeon.name);
-                    DungeonFlowNode
-                        customRoom,
-                        hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() },
-                        lastNode = hub;
-                    flow.AddNodeToFlow(hub, flow.FirstNode);
-                    foreach (var room in RoomFactory.rooms.Values)
-                    {
-                        customRoom = new DungeonFlowNode(flow) { overrideExactRoom = room };
-                        flow.AddNodeToFlow(customRoom, lastNode);
-                        hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() };
-                        flow.AddNodeToFlow(hub, customRoom);
-                        lastNode = hub;
-                    }
-
                 }
                 else
                 {
-                    foreach (var room in RoomFactory.rooms.Values)
-                    {
-                        try
-                        {
-                            var wroom = new WeightedRoom()
-                            {
-                                room = room,
-                                additionalPrerequisites = new DungeonPrerequisite[0],
-                                weight = 2f
-                            };
-
-                            flow.fallbackRoomTable.includedRooms.Add(wroom);
-                            foreach (var node in flow.AllNodes)
-                            {
-                                if (node.nodeType == DungeonFlowNode.ControlNodeType.ROOM && node.roomCategory == PrototypeDungeonRoom.RoomCategory.CONNECTOR)
-                                    node.overrideRoomTable.includedRooms.Add(wroom);
-                            }
-                        }catch(Exception e)
-                        {
-                            Tools.PrintException(e);
-                        }
-                    }
+                    AddCustomRooms(flow);
                 }
+                Tools.Print("Dungeon name: " + dungeon.name);
                 Tools.Print("Override Flow set to: " + flow.name);
             }
             dungeon = null;
+        }
+
+        public static void AddCustomRooms(DungeonFlow flow)
+        {
+            foreach (var room in RoomFactory.rooms.Values)
+            {
+                try
+                {
+                    var wRoom = new WeightedRoom()
+                    {
+                        room = room,
+                        additionalPrerequisites = new DungeonPrerequisite[0],
+                        weight = 100f
+                    };
+
+                    AddRoomToFlowTables(flow, wRoom, DungeonFlowNode.ControlNodeType.ROOM, room.category);
+                }
+                catch (Exception e)
+                {
+                    Tools.PrintException(e);
+                }
+            }
+        }
+
+        public static void AddRoomToFlowTables(DungeonFlow flow, WeightedRoom wRoom, DungeonFlowNode.ControlNodeType controlNodeType, PrototypeDungeonRoom.RoomCategory roomCategory)
+        {
+            if (flow.fallbackRoomTable?.includedRooms != null)
+                flow.fallbackRoomTable.includedRooms.Add(wRoom);
+            foreach (var node in flow.AllNodes)
+            {
+
+                if (node?.overrideRoomTable?.includedRooms == null) continue;
+
+                if (node.nodeType == controlNodeType && node.roomCategory == roomCategory)
+                    node.overrideRoomTable.includedRooms.Add(wRoom);
+            }
         }
 
         public static void CollectDataForAnalysis(DungeonFlow flow, Dungeon dungeon)

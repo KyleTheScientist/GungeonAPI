@@ -24,10 +24,12 @@ namespace GungeonAPI
             isToggle,
             usesCustomColliderOffsetAndSize;
         public Type interactableComponent = null;
-        public bool isBreachShrine = true;
+        public bool isBreachShrine = false;
+        public PrototypeDungeonRoom room;
         public Dictionary<string, int> roomStyles;
 
         public static Dictionary<string, GameObject> builtShrines = new Dictionary<string, GameObject>();
+        public static List<PrototypeDungeonRoom> shrineRooms = new List<PrototypeDungeonRoom>();
         private static bool m_initialized, m_builtShrines;
 
         public static void Init()
@@ -61,7 +63,7 @@ namespace GungeonAPI
 
                 //Add (hopefully) unique ID to shrine for tracking
                 string ID = $"{modID}:{name}".ToLower().Replace(" ", "_");
-                shrine.name = name;
+                shrine.name = ID;
 
                 //Position sprite 
                 var sprite = shrine.GetComponent<tk2dSprite>();
@@ -110,6 +112,9 @@ namespace GungeonAPI
                 }
 
 
+                var prefab = FakePrefab.Clone(shrine);
+                prefab.GetComponent<CustomShrineData>().Copy(data);
+                prefab.name = ID;
                 if (isBreachShrine)
                 {
                     if (!RoomHandler.unassignedInteractableObjects.Contains(interactable))
@@ -117,11 +122,13 @@ namespace GungeonAPI
                 }
                 else
                 {
-                    //DungeonHandler.RegisterDefaultShrineRoom(shrine, ID, offset);
+                    if (!room)
+                        room = RoomFactory.CreateEmptyRoom();
+                    RoomFactory.RegisterShrineRoom(prefab, room, ID, offset);
+                    shrineRooms.Add(room);
                 }
 
-                var prefab = FakePrefab.Clone(shrine);
-                prefab.GetComponent<CustomShrineData>().Copy(data);
+                
                 builtShrines.Add(ID, prefab);
                 Tools.Print("Added shrine: " + ID);
                 return shrine;
@@ -177,6 +184,20 @@ namespace GungeonAPI
             public Action<PlayerController>
                 OnAccept,
                 OnDecline;
+
+            void Start()
+            {
+                string id = this.name.Replace("(Clone)", "");
+                Tools.Print($"Starting shrine {id} | Found in dict: {ShrineFactory.builtShrines.ContainsKey(id)}");
+
+                if (ShrineFactory.builtShrines.ContainsKey(id))
+                    Copy(ShrineFactory.builtShrines[id].GetComponent<CustomShrineData>());
+                else
+                    Tools.PrintError($"Was this shrine registered correctly?: {id}");
+
+                this.GetComponent<SimpleInteractable>().OnAccept = OnAccept;
+                this.GetComponent<SimpleInteractable>().OnDecline = OnDecline;
+            }
 
             public void Copy(CustomShrineData other)
             {

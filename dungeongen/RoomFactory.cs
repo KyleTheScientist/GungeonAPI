@@ -14,9 +14,10 @@ namespace GungeonAPI
 {
     public static class RoomFactory
     {
-        public static readonly string dataHeader = "***DATA***";
-        public static string roomDirectory = Path.Combine(ETGMod.GameFolder, "CustomRoomData");
         public static Dictionary<string, PrototypeDungeonRoom> rooms = new Dictionary<string, PrototypeDungeonRoom>();
+        public static string roomDirectory = Path.Combine(ETGMod.GameFolder, "CustomRoomData");
+
+        private static readonly string dataHeader = "***DATA***";
         private static FieldInfo m_cellData = typeof(PrototypeDungeonRoom).GetField("m_cellData", BindingFlags.Instance | BindingFlags.NonPublic);
         private static RoomEventDefinition sealOnEnterWithEnemies = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENTER_WITH_ENEMIES, RoomEventTriggerAction.SEAL_ROOM);
         private static RoomEventDefinition unsealOnRoomClear = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENEMIES_CLEARED, RoomEventTriggerAction.UNSEAL_ROOM);
@@ -30,6 +31,41 @@ namespace GungeonAPI
                 Tools.Log($"Found room: \"{f}\"");
                 rooms.Add(f, BuildFromFile(Path.Combine(roomDirectory, f)));
             }
+        }
+
+        public static void RegisterShrineRoom(GameObject shrine, PrototypeDungeonRoom protoroom, string ID, Vector2 offset)
+        {
+
+            protoroom.category = PrototypeDungeonRoom.RoomCategory.SPECIAL;
+            protoroom.subCategorySpecial = PrototypeDungeonRoom.RoomSpecialSubCategory.UNSPECIFIED_SPECIAL;
+
+            DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
+            Vector2 position = new Vector2(protoroom.Width / 2 + offset.x, protoroom.Height / 2 + offset.y);
+            protoroom.placedObjectPositions.Add(position);
+            protoroom.placedObjects.Add(new PrototypePlacedObjectData()
+            {
+                contentsBasePosition = position,
+                fieldData = new List<PrototypePlacedObjectFieldData>(),
+                instancePrerequisites = emptyReqs,
+                linkedTriggerAreaIDs = new List<int>(),
+                placeableContents = new DungeonPlaceable()
+                {
+                    width = 2,
+                    height = 2,
+                    respectsEncounterableDifferentiator = true,
+                    variantTiers = new List<DungeonPlaceableVariant>()
+                    {
+                        new DungeonPlaceableVariant()
+                        {
+                            percentChance = 1,
+                            nonDatabasePlaceable = shrine,
+                            prerequisites = emptyReqs,
+                            materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
+                        }
+                    }
+                }
+            });
+            rooms.Add(ID, protoroom);
         }
 
         public static PrototypeDungeonRoom BuildFromFile(string roomPath)
