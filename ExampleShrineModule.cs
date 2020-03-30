@@ -24,25 +24,14 @@ namespace GungeonAPI
             {
                 GungeonAPI.Init();
 
-                //not mandatory
-                //Dictionary<string, int> styles = new Dictionary<string, int>()
-                //{
-                //    { "Base_Castle", 4 },
-                //    { "Base_Gungeon", 7 },
-                //    { "Base_Mines", 5 },
-                //    { "Base_Catacombs", 4 },
-                //    { "Base_Forge", 3 },
-                //    { "Base_Sewer", 4 },
-                //    { "Base_Cathedral ", 0 },
-                //    { "Base_BulletHell", 1 },
-                //};
-
                 //define shrine
                 ShrineFactory sf = new ShrineFactory()
                 {
                     name = "SpinShrine",
-                    spritePath = "resource/shrine_no_gun_001.png",
+                    modID = "kts",
                     text = "Spin to win?",
+                    spritePath = "resource/shrine_no_gun_001.png",
+                    room = RoomFactory.BuildFromResource("resource/rooms/ShrineRoom.room"),
                     acceptText = "Accept",
                     declineText = "Decline",
                     OnAccept = (p) => { Tools.Print("Accept"); },
@@ -51,9 +40,7 @@ namespace GungeonAPI
                     offset = new Vector3(10, 0, 0),
                     talkPointOffset = new Vector3(0, 3, 0),
                     isToggle = true,
-                    modID="kts",
-                    //roomStyles = styles,
-                    room = RoomFactory.BuildFromResource("resource/rooms/ShrineRoom.room")
+                    isBreachShrine = false
                 };
                 //register shrine
                 sf.Build();

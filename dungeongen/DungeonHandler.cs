@@ -57,7 +57,7 @@ namespace GungeonAPI
                     {
                         room = room,
                         additionalPrerequisites = new DungeonPrerequisite[0],
-                        weight = 100f
+                        weight = 1.5f
                     };
 
                     AddRoomToFlowTables(flow, wRoom, DungeonFlowNode.ControlNodeType.ROOM, room.category);
