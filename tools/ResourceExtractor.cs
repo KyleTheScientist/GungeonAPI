@@ -39,10 +39,10 @@ namespace GungeonAPI
         /// <summary>
         /// Creates a Texture2D from a file in the sprites directory
         /// </summary>
-        public static Texture2D GetTextureFromFile(string fileName)
+        public static Texture2D GetTextureFromFile(string fileName, string extension = ".png")
         {
-            fileName = fileName.Replace(".png", "");
-            string filePath = Path.Combine(spritesDirectory, fileName + ".png");
+            fileName = fileName.Replace(extension, "");
+            string filePath = Path.Combine(spritesDirectory, fileName + extension);
             if (!File.Exists(filePath))
             {
                 Tools.PrintError(filePath + " not found.");
@@ -151,7 +151,7 @@ namespace GungeonAPI
             Texture2D texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
             ImageConversion.LoadImage(texture, bytes);
             texture.filterMode = FilterMode.Point;
-    
+
             string name = file.Substring(0, file.LastIndexOf('.'));
             if (name.LastIndexOf('.') >= 0)
             {

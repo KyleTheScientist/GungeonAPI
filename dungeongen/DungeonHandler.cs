@@ -15,11 +15,13 @@ namespace GungeonAPI
         private static bool initialized = false;
         private static readonly int roomWidth = 14, roomHeight = 14;
         private static Dictionary<string, PrototypeDungeonRoom> registeredShrineRooms = new Dictionary<string, PrototypeDungeonRoom>();
+        public static bool debugFlow = false;
 
         public static void Init()
         {
             if (!initialized)
             {
+                RoomFactory.LoadRoomsFromRoomDirectory();
                 DungeonHooks.OnPreDungeonGeneration += OnPreDungeonGen;
                 DungeonHooks.OnPostDungeonGeneration += OnPostDungeonGen;
                 initialized = true;
@@ -68,20 +70,51 @@ namespace GungeonAPI
             CollectDataForAnalysis(flow, dungeon);
             if (flow.name != "Foyer Flow" && !GameManager.IsReturningToFoyerWithPlayer)
             {
-                //flow = SampleFlow.CreateRoomTypeSampleFlow(dungeon);
-                //flow = SampleFlow.CreateMazeFlow(dungeon);
-                flow = SampleFlow.CreateEntranceExitFlow(dungeon);
-                generator.AssignFlow(flow);
-                Tools.Print("Dungeon name: " + dungeon.name);
+                if (debugFlow)
+                {
+                    flow = SampleFlow.CreateEntranceExitFlow(dungeon);
+                    generator.AssignFlow(flow);
+                    Tools.Print("Dungeon name: " + dungeon.name);
+                    DungeonFlowNode
+                        customRoom,
+                        hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() },
+                        lastNode = hub;
+                    flow.AddNodeToFlow(hub, flow.FirstNode);
+                    foreach (var room in RoomFactory.rooms.Values)
+                    {
+                        customRoom = new DungeonFlowNode(flow) { overrideExactRoom = room };
+                        flow.AddNodeToFlow(customRoom, lastNode);
+                        hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() };
+                        flow.AddNodeToFlow(hub, customRoom);
+                        lastNode = hub;
+                    }
 
-                var hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() };
-                flow.AddNodeToFlow(hub, flow.FirstNode);
-                flow.AddNodeToFlow(new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.Build("resource/rooms/test_room.room") }, hub);
-                ////foreach (var shrineID in registeredShrineRooms.Keys)
-                //{
-                //    //registeredShrineRooms[shrineID].overrideRoomVisualType = RoomFactory.GetStyleValue(dungeon.name, shrineID);
-                //    //flow.AddNodeToFlow(new DungeonFlowNode(flow) { overrideExactRoom = registeredShrineRooms[shrineID] }, flow.FirstNode);
-                //}
+                }
+                else
+                {
+                    foreach (var room in RoomFactory.rooms.Values)
+                    {
+                        try
+                        {
+                            var wroom = new WeightedRoom()
+                            {
+                                room = room,
+                                additionalPrerequisites = new DungeonPrerequisite[0],
+                                weight = 2f
+                            };
+
+                            flow.fallbackRoomTable.includedRooms.Add(wroom);
+                            foreach (var node in flow.AllNodes)
+                            {
+                                if (node.nodeType == DungeonFlowNode.ControlNodeType.ROOM && node.roomCategory == PrototypeDungeonRoom.RoomCategory.CONNECTOR)
+                                    node.overrideRoomTable.includedRooms.Add(wroom);
+                            }
+                        }catch(Exception e)
+                        {
+                            Tools.PrintException(e);
+                        }
+                    }
+                }
                 Tools.Print("Override Flow set to: " + flow.name);
             }
             dungeon = null;

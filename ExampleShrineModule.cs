@@ -56,6 +56,14 @@ namespace GungeonAPI
                 //register shrine
                 sf.Build();
 
+                ETGModConsole.Commands.AddUnit("debugflow", (args) =>
+                {
+                    DungeonHandler.debugFlow = !DungeonHandler.debugFlow;
+                    string status = DungeonHandler.debugFlow ? "enabled" : "disabled";
+                    string color = DungeonHandler.debugFlow ? "00FF00" : "FF0000";
+                    Tools.Print($"Debug flow {status}", color);
+                });
+
                 //This is useful for figuring out where you want your shrine to go in the breach
                 ETGModConsole.Commands.AddUnit("getpos", (args) =>
                 {

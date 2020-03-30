@@ -113,5 +113,8 @@
   <ItemGroup>
     <EmbeddedResource Include="resource\rooms\test_room.room" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\kill_me.room" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

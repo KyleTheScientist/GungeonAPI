@@ -62,7 +62,7 @@ namespace GungeonAPI
             var entrance = NodeFromAssetName(flow, "elevator entrance");
             flow.FirstNode = entrance;
             flow.AddNodeToFlow(entrance, null);
-            var maze = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.Build("resource/rooms/maze.room") };
+            var maze = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.BuildFromResource("resource/rooms/maze.room") };
             flow.AddNodeToFlow(maze, entrance);
             flow.AddNodeToFlow(NodeFromAssetName(flow, "exit_room_basic"), maze);
             dungeon = null;

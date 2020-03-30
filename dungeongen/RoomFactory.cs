@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.IO;
 using UnityEngine;
 using Dungeonator;
 using Random = UnityEngine.Random;
@@ -14,16 +15,42 @@ namespace GungeonAPI
     public static class RoomFactory
     {
         public static readonly string dataHeader = "***DATA***";
+        public static string roomDirectory = Path.Combine(ETGMod.GameFolder, "CustomRoomData");
+        public static Dictionary<string, PrototypeDungeonRoom> rooms = new Dictionary<string, PrototypeDungeonRoom>();
         private static FieldInfo m_cellData = typeof(PrototypeDungeonRoom).GetField("m_cellData", BindingFlags.Instance | BindingFlags.NonPublic);
         private static RoomEventDefinition sealOnEnterWithEnemies = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENTER_WITH_ENEMIES, RoomEventTriggerAction.SEAL_ROOM);
         private static RoomEventDefinition unsealOnRoomClear = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENEMIES_CLEARED, RoomEventTriggerAction.UNSEAL_ROOM);
 
-        public static PrototypeDungeonRoom Build(string roomPath)
+        public static void LoadRoomsFromRoomDirectory()
+        {
+            Directory.CreateDirectory(roomDirectory);
+            foreach (string f in Directory.GetFiles(roomDirectory))
+            {
+                if (!f.EndsWith(".room")) continue;
+                Tools.Log($"Found room: \"{f}\"");
+                rooms.Add(f, BuildFromFile(Path.Combine(roomDirectory, f)));
+            }
+        }
+
+        public static PrototypeDungeonRoom BuildFromFile(string roomPath)
+        {
+            var texture = ResourceExtractor.GetTextureFromFile(roomPath, ".room");
+            RoomData roomData = ExtractRoomDataFromFile(roomPath);
+            return Build(texture, roomData);
+        }
+
+        public static PrototypeDungeonRoom BuildFromResource(string roomPath)
+        {
+            var texture = ResourceExtractor.GetTextureFromResource(roomPath);
+            RoomData roomData = ExtractRoomDataFromResource(roomPath);
+            return Build(texture, roomData);
+        }
+
+        public static PrototypeDungeonRoom Build(Texture2D texture, RoomData roomData)
         {
             try
             {
-                var texture = ResourceExtractor.GetTextureFromResource(roomPath);
-                RoomData roomData = ExtractRoomData(roomPath);
+
                 var room = CreateRoomFromTexture(texture);
                 ApplyRoomData(room, roomData);
                 room.UpdatePrecalculatedData();
@@ -67,9 +94,20 @@ namespace GungeonAPI
             }
         }
 
-        public static RoomData ExtractRoomData(string path)
+        public static RoomData ExtractRoomDataFromFile(string path)
+        {
+            string data = ResourceExtractor.BytesToString(File.ReadAllBytes(path));
+            return ExtractRoomData(data);
+        }
+
+        public static RoomData ExtractRoomDataFromResource(string path)
         {
             string data = ResourceExtractor.BytesToString(ResourceExtractor.ExtractEmbeddedResource(path));
+            return ExtractRoomData(data);
+        }
+
+        public static RoomData ExtractRoomData(string data)
+        {
             if (data.Contains(dataHeader))
             {
                 string dataContent = data.Substring(data.IndexOf(dataHeader) + dataHeader.Length);
@@ -377,6 +415,7 @@ namespace GungeonAPI
             public int[] enemyReinforcementLayers;
             public Vector2[] exitPositions;
             public string[] exitDirections;
+            public string[] floors;
         }
     }
 }
