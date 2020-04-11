@@ -7,20 +7,27 @@ using System.IO;
 using UnityEngine;
 using Dungeonator;
 using Random = UnityEngine.Random;
-using CustomShrineData = GungeonAPI.ShrineFactory.CustomShrineData;
+using CustomShrineController = GungeonAPI.ShrineFactory.CustomShrineController;
 using FloorType = Dungeonator.CellVisualData.CellFloorType;
 
 namespace GungeonAPI
 {
     public static class RoomFactory
     {
-        public static Dictionary<string, PrototypeDungeonRoom> rooms = new Dictionary<string, PrototypeDungeonRoom>();
+        public static Dictionary<string, RoomData> rooms = new Dictionary<string, RoomData>();
         public static string roomDirectory = Path.Combine(ETGMod.GameFolder, "CustomRoomData");
+        public static AssetBundle[] assetBundles =
+        {
+            ResourceManager.LoadAssetBundle("shared_auto_001"),
+            ResourceManager.LoadAssetBundle("shared_auto_002")
+        };
 
         private static readonly string dataHeader = "***DATA***";
         private static FieldInfo m_cellData = typeof(PrototypeDungeonRoom).GetField("m_cellData", BindingFlags.Instance | BindingFlags.NonPublic);
         private static RoomEventDefinition sealOnEnterWithEnemies = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENTER_WITH_ENEMIES, RoomEventTriggerAction.SEAL_ROOM);
         private static RoomEventDefinition unsealOnRoomClear = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENEMIES_CLEARED, RoomEventTriggerAction.UNSEAL_ROOM);
+
+
 
         public static void LoadRoomsFromRoomDirectory()
         {
@@ -28,58 +35,29 @@ namespace GungeonAPI
             foreach (string f in Directory.GetFiles(roomDirectory))
             {
                 if (!f.EndsWith(".room")) continue;
-                Tools.Log($"Found room: \"{f}\"");
-                rooms.Add(f, BuildFromFile(Path.Combine(roomDirectory, f)));
+                string name = Path.GetFileName(f);
+                Tools.Log($"Found room: \"{name}\"");
+                var roomData = BuildFromFile(f);
+                DungeonHandler.Register(roomData);
+                rooms.Add(name, roomData);
             }
         }
 
-        public static void RegisterShrineRoom(GameObject shrine, PrototypeDungeonRoom protoroom, string ID, Vector2 offset)
-        {
-
-            protoroom.category = PrototypeDungeonRoom.RoomCategory.SPECIAL;
-            protoroom.subCategorySpecial = PrototypeDungeonRoom.RoomSpecialSubCategory.UNSPECIFIED_SPECIAL;
-
-            DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
-            Vector2 position = new Vector2(protoroom.Width / 2 + offset.x, protoroom.Height / 2 + offset.y);
-            protoroom.placedObjectPositions.Add(position);
-            protoroom.placedObjects.Add(new PrototypePlacedObjectData()
-            {
-                contentsBasePosition = position,
-                fieldData = new List<PrototypePlacedObjectFieldData>(),
-                instancePrerequisites = emptyReqs,
-                linkedTriggerAreaIDs = new List<int>(),
-                placeableContents = new DungeonPlaceable()
-                {
-                    width = 2,
-                    height = 2,
-                    respectsEncounterableDifferentiator = true,
-                    variantTiers = new List<DungeonPlaceableVariant>()
-                    {
-                        new DungeonPlaceableVariant()
-                        {
-                            percentChance = 1,
-                            nonDatabasePlaceable = shrine,
-                            prerequisites = emptyReqs,
-                            materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
-                        }
-                    }
-                }
-            });
-            rooms.Add(ID, protoroom);
-        }
-
-        public static PrototypeDungeonRoom BuildFromFile(string roomPath)
+        public static RoomData BuildFromFile(string roomPath)
         {
             var texture = ResourceExtractor.GetTextureFromFile(roomPath, ".room");
+            texture.name = Path.GetFileName(roomPath);
             RoomData roomData = ExtractRoomDataFromFile(roomPath);
-            return Build(texture, roomData);
+            roomData.room = Build(texture, roomData);
+            return roomData;
         }
 
-        public static PrototypeDungeonRoom BuildFromResource(string roomPath)
+        public static RoomData BuildFromResource(string roomPath)
         {
             var texture = ResourceExtractor.GetTextureFromResource(roomPath);
             RoomData roomData = ExtractRoomDataFromResource(roomPath);
-            return Build(texture, roomData);
+            roomData.room = Build(texture, roomData);
+            return roomData;
         }
 
         public static PrototypeDungeonRoom Build(Texture2D texture, RoomData roomData)
@@ -103,7 +81,6 @@ namespace GungeonAPI
 
         public static void ApplyRoomData(PrototypeDungeonRoom room, RoomData roomData)
         {
-            Tools.Print("Building Exits...");
             if (roomData.exitPositions != null)
             {
                 for (int i = 0; i < roomData.exitPositions.Length; i++)
@@ -120,7 +97,6 @@ namespace GungeonAPI
                 AddExit(room, new Vector2(0, room.Height / 2), DungeonData.Direction.WEST);
             }
 
-            Tools.Print("Adding Enemies...");
             if (roomData.enemyPositions != null)
             {
                 for (int i = 0; i < roomData.enemyPositions.Length; i++)
@@ -128,6 +104,35 @@ namespace GungeonAPI
                     AddEnemyToRoom(room, roomData.enemyPositions[i], roomData.enemyGUIDs[i], roomData.enemyReinforcementLayers[i]);
                 }
             }
+
+            if (roomData.placeablePositions != null)
+            {
+                for (int i = 0; i < roomData.placeablePositions.Length; i++)
+                {
+                    AddPlaceableToRoom(room, roomData.placeablePositions[i], roomData.placeableGUIDs[i]);
+                }
+            }
+
+            if (roomData.floors != null)
+            {
+                foreach (var floor in roomData.floors)
+                {
+                    room.prerequisites.Add(new DungeonPrerequisite()
+                    {
+                        prerequisiteType = DungeonPrerequisite.PrerequisiteType.TILESET,
+                        requiredTileset = Tools.GetEnumValue<GlobalDungeonData.ValidTilesets>(floor)
+                    });
+                }
+            }
+            //Set categories
+            if (!string.IsNullOrEmpty(roomData.category))
+                room.category = Tools.GetEnumValue<PrototypeDungeonRoom.RoomCategory>(roomData.category);
+            if (!string.IsNullOrEmpty(roomData.normalSubCategory))
+                room.subCategoryNormal = Tools.GetEnumValue<PrototypeDungeonRoom.RoomNormalSubCategory>(roomData.normalSubCategory);
+            if (!string.IsNullOrEmpty(roomData.bossSubCategory))
+                room.subCategoryBoss = Tools.GetEnumValue<PrototypeDungeonRoom.RoomBossSubCategory>(roomData.bossSubCategory);
+            if (!string.IsNullOrEmpty(roomData.specialSubCatergory))
+                room.subCategorySpecial = Tools.GetEnumValue<PrototypeDungeonRoom.RoomSpecialSubCategory>(roomData.specialSubCatergory);
         }
 
         public static RoomData ExtractRoomDataFromFile(string path)
@@ -209,6 +214,18 @@ namespace GungeonAPI
                 return DiagonalWallType.NONE;
         }
 
+        public static RoomData CreateEmptyRoomData(int width = 12, int height = 12)
+        {
+            RoomData data = new RoomData()
+            {
+                room = CreateEmptyRoom(width, height),
+                category = "NORMAL",
+                weight = DungeonHandler.GlobalRoomWeight
+            };
+
+            return data;
+        }
+
         public static PrototypeDungeonRoom CreateEmptyRoom(int width = 12, int height = 12)
         {
             try
@@ -252,11 +269,68 @@ namespace GungeonAPI
         {
             if (ShrineFactory.builtShrines != null && ShrineFactory.builtShrines.ContainsKey(shrineID))
             {
-                var shrineData = ShrineFactory.builtShrines[shrineID]?.GetComponent<CustomShrineData>();
+                var shrineData = ShrineFactory.builtShrines[shrineID]?.GetComponent<CustomShrineController>();
                 if (shrineData != null && shrineData.roomStyles != null && shrineData.roomStyles.ContainsKey(dungeonName))
                     return shrineData.roomStyles[dungeonName];
             }
             return -1;
+        }
+
+        public static void AddPlaceableToRoom(PrototypeDungeonRoom room, Vector2 location, string assetPath)
+        {
+            try
+            {
+                var asset = GetPlaceableFromBundles(assetPath);
+                if (asset)
+                {
+                    DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
+                    room.placedObjectPositions.Add(location);
+                    room.placedObjects.Add(new PrototypePlacedObjectData()
+                    {
+                        contentsBasePosition = location,
+                        fieldData = new List<PrototypePlacedObjectFieldData>(),
+                        instancePrerequisites = emptyReqs,
+                        linkedTriggerAreaIDs = new List<int>(),
+                        placeableContents = new DungeonPlaceable()
+                        {
+                            width = 2,
+                            height = 2,
+                            respectsEncounterableDifferentiator = true,
+                            variantTiers = new List<DungeonPlaceableVariant>()
+                        {
+                            new DungeonPlaceableVariant()
+                            {
+                                percentChance = 1,
+                                nonDatabasePlaceable = asset,
+                                prerequisites = emptyReqs,
+                                materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
+                            }
+                        }
+                        }
+                    });
+                    Tools.Print($"Added {asset.name} to room.");
+                }
+                else
+                {
+                    Tools.PrintError($"Unable to find asset in asset bundles: {assetPath}");
+                }
+            }
+            catch (Exception e)
+            {
+                Tools.PrintException(e);
+            }
+        }
+
+        public static GameObject GetPlaceableFromBundles(string assetPath)
+        {
+            GameObject asset = null;
+            foreach (var bundle in assetBundles)
+            {
+                asset = bundle.LoadAsset(assetPath) as GameObject;
+                if (asset)
+                    break;
+            }
+            return asset;
         }
 
         public static void AddEnemyToRoom(PrototypeDungeonRoom room, Vector2 location, string guid, int layer)
@@ -446,12 +520,23 @@ namespace GungeonAPI
 
         public struct RoomData
         {
+            public string
+                category,
+                normalSubCategory,
+                specialSubCatergory,
+                bossSubCategory;
             public Vector2[] enemyPositions;
             public string[] enemyGUIDs;
+            public Vector2[] placeablePositions;
+            public string[] placeableGUIDs;
             public int[] enemyReinforcementLayers;
             public Vector2[] exitPositions;
             public string[] exitDirections;
             public string[] floors;
+            public float weight;
+            public bool isSpecialRoom;
+            [NonSerialized]
+            public PrototypeDungeonRoom room;
         }
     }
 }

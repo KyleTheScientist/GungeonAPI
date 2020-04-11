@@ -14,9 +14,10 @@ namespace GungeonAPI
             modID,
             spritePath,
             text, acceptText, declineText;
-        public Action<PlayerController>
+        public Action<PlayerController, GameObject>
             OnAccept,
             OnDecline;
+        public Func<PlayerController, GameObject, bool> CanUse;
         public Vector3 talkPointOffset;
         public Vector3 offset = new Vector3(43.8f, 42.4f, 42.9f);
         public IntVector2 colliderOffset, colliderSize;
@@ -29,7 +30,6 @@ namespace GungeonAPI
         public Dictionary<string, int> roomStyles;
 
         public static Dictionary<string, GameObject> builtShrines = new Dictionary<string, GameObject>();
-        public static List<PrototypeDungeonRoom> shrineRooms = new List<PrototypeDungeonRoom>();
         private static bool m_initialized, m_builtShrines;
 
         public static void Init()
@@ -40,7 +40,7 @@ namespace GungeonAPI
             {
                 if (flow.name != "Foyer Flow" && !GameManager.IsReturningToFoyerWithPlayer)
                 {
-                    foreach (var cshrine in GameObject.FindObjectsOfType<CustomShrineData>())
+                    foreach (var cshrine in GameObject.FindObjectsOfType<CustomShrineController>())
                     {
                         if (!FakePrefab.IsFakePrefab(cshrine))
                             GameObject.Destroy(cshrine.gameObject);
@@ -84,7 +84,7 @@ namespace GungeonAPI
                 }
                 var body = ItemAPI.SpriteBuilder.SetUpSpeculativeRigidbody(sprite, colliderOffset, colliderSize);
 
-                var data = shrine.AddComponent<CustomShrineData>();
+                var data = shrine.AddComponent<CustomShrineController>();
                 data.ID = ID;
                 data.roomStyles = roomStyles;
                 data.isBreachShrine = true;
@@ -93,6 +93,7 @@ namespace GungeonAPI
                 data.factory = this;
                 data.OnAccept = OnAccept;
                 data.OnDecline = OnDecline;
+                data.CanUse = CanUse;
 
                 IPlayerInteractable interactable;
                 //Register as interactable
@@ -104,6 +105,7 @@ namespace GungeonAPI
                     simpInt.isToggle = this.isToggle;
                     simpInt.OnAccept = this.OnAccept;
                     simpInt.OnDecline = this.OnDecline;
+                    simpInt.CanUse = CanUse;
                     simpInt.text = this.text;
                     simpInt.acceptText = this.acceptText;
                     simpInt.declineText = this.declineText;
@@ -113,7 +115,7 @@ namespace GungeonAPI
 
 
                 var prefab = FakePrefab.Clone(shrine);
-                prefab.GetComponent<CustomShrineData>().Copy(data);
+                prefab.GetComponent<CustomShrineController>().Copy(data);
                 prefab.name = ID;
                 if (isBreachShrine)
                 {
@@ -124,11 +126,10 @@ namespace GungeonAPI
                 {
                     if (!room)
                         room = RoomFactory.CreateEmptyRoom();
-                    RoomFactory.RegisterShrineRoom(prefab, room, ID, offset);
-                    shrineRooms.Add(room);
+                    RegisterShrineRoom(prefab, room, ID, offset);
                 }
 
-                
+
                 builtShrines.Add(ID, prefab);
                 Tools.Print("Added shrine: " + ID);
                 return shrine;
@@ -140,6 +141,49 @@ namespace GungeonAPI
             }
         }
 
+        public static void RegisterShrineRoom(GameObject shrine, PrototypeDungeonRoom protoroom, string ID, Vector2 offset)
+        {
+
+            protoroom.category = PrototypeDungeonRoom.RoomCategory.NORMAL;
+
+            DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
+            Vector2 position = new Vector2(protoroom.Width / 2 + offset.x, protoroom.Height / 2 + offset.y);
+            protoroom.placedObjectPositions.Add(position);
+            protoroom.placedObjects.Add(new PrototypePlacedObjectData()
+            {
+                contentsBasePosition = position,
+                fieldData = new List<PrototypePlacedObjectFieldData>(),
+                instancePrerequisites = emptyReqs,
+                linkedTriggerAreaIDs = new List<int>(),
+                placeableContents = new DungeonPlaceable()
+                {
+                    width = 2,
+                    height = 2,
+                    respectsEncounterableDifferentiator = true,
+                    variantTiers = new List<DungeonPlaceableVariant>()
+                    {
+                        new DungeonPlaceableVariant()
+                        {
+                            percentChance = 1,
+                            nonDatabasePlaceable = shrine,
+                            prerequisites = emptyReqs,
+                            materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
+                        }
+                    }
+                }
+            });
+
+            var data = new RoomFactory.RoomData()
+            {
+                room = protoroom,
+                isSpecialRoom = true,
+                category = "SPECIAL",
+                specialSubCatergory = "UNSPECIFIED_SPECIAL"
+            };
+            RoomFactory.rooms.Add(ID, data);
+            DungeonHandler.Register(data);
+        }
+
         private static void PlaceBreachShrines()
         {
             if (m_builtShrines) return;
@@ -148,11 +192,11 @@ namespace GungeonAPI
             {
                 try
                 {
-                    var prefabShrineData = prefab.GetComponent<CustomShrineData>();
+                    var prefabShrineData = prefab.GetComponent<CustomShrineController>();
                     if (!prefabShrineData.isBreachShrine) continue;
 
                     Tools.Print($"    {prefab.name}");
-                    var shrine = GameObject.Instantiate(prefab).GetComponent<CustomShrineData>();
+                    var shrine = GameObject.Instantiate(prefab).GetComponent<CustomShrineController>();
                     shrine.Copy(prefabShrineData);
                     shrine.gameObject.SetActive(true);
                     shrine.sprite.PlaceAtPositionByAnchor(shrine.offset, tk2dBaseSprite.Anchor.LowerCenter);
@@ -161,6 +205,7 @@ namespace GungeonAPI
                     {
                         ((SimpleInteractable)interactable).OnAccept = shrine.OnAccept;
                         ((SimpleInteractable)interactable).OnDecline = shrine.OnDecline;
+                        ((SimpleInteractable)interactable).CanUse = shrine.CanUse;
                     }
                     if (!RoomHandler.unassignedInteractableObjects.Contains(interactable))
                         RoomHandler.unassignedInteractableObjects.Add(interactable);
@@ -173,7 +218,7 @@ namespace GungeonAPI
             m_builtShrines = true;
         }
 
-        public class CustomShrineData : BraveBehaviour
+        public class CustomShrineController : DungeonPlaceableBehaviour
         {
             public string ID;
             public bool isBreachShrine;
@@ -181,9 +226,13 @@ namespace GungeonAPI
             public List<PixelCollider> pixelColliders;
             public Dictionary<string, int> roomStyles;
             public ShrineFactory factory;
-            public Action<PlayerController>
+            public Action<PlayerController, GameObject>
                 OnAccept,
                 OnDecline;
+            public Func<PlayerController, GameObject, bool> CanUse;
+            private RoomHandler m_parentRoom;
+            private GameObject m_instanceMinimapIcon;
+            public int numUses = 0;
 
             void Start()
             {
@@ -191,15 +240,16 @@ namespace GungeonAPI
                 Tools.Print($"Starting shrine {id} | Found in dict: {ShrineFactory.builtShrines.ContainsKey(id)}");
 
                 if (ShrineFactory.builtShrines.ContainsKey(id))
-                    Copy(ShrineFactory.builtShrines[id].GetComponent<CustomShrineData>());
+                    Copy(ShrineFactory.builtShrines[id].GetComponent<CustomShrineController>());
                 else
                     Tools.PrintError($"Was this shrine registered correctly?: {id}");
 
                 this.GetComponent<SimpleInteractable>().OnAccept = OnAccept;
                 this.GetComponent<SimpleInteractable>().OnDecline = OnDecline;
+                this.GetComponent<SimpleInteractable>().CanUse = CanUse;
             }
 
-            public void Copy(CustomShrineData other)
+            public void Copy(CustomShrineController other)
             {
                 this.ID = other.ID;
                 this.roomStyles = other.roomStyles;
@@ -209,6 +259,28 @@ namespace GungeonAPI
                 this.factory = other.factory;
                 this.OnAccept = other.OnAccept;
                 this.OnDecline = other.OnDecline;
+                this.CanUse = other.CanUse;
+            }
+
+            public void ConfigureOnPlacement(RoomHandler room)
+            {
+                this.m_parentRoom = room;
+                this.RegisterMinimapIcon();
+            }
+
+            public void RegisterMinimapIcon()
+            {
+                this.m_instanceMinimapIcon = Minimap.Instance.RegisterRoomIcon(this.m_parentRoom, (GameObject)BraveResources.Load("Global Prefabs/Minimap_Shrine_Icon", ".prefab"), false);
+            }
+
+            // Token: 0x06005F13 RID: 24339 RVA: 0x002482C8 File Offset: 0x002464C8
+            public void GetRidOfMinimapIcon()
+            {
+                if (this.m_instanceMinimapIcon != null)
+                {
+                    Minimap.Instance.DeregisterRoomIcon(this.m_parentRoom, this.m_instanceMinimapIcon);
+                    this.m_instanceMinimapIcon = null;
+                }
             }
         }
     }

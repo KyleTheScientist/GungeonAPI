@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace GungeonAPI
 {
-    public class ExampleShrineModule : ETGModule
+    public class GAPIModule : ETGModule
     {
-        public static readonly string VERSION = "Beta 0.3";
+        public static readonly string VERSION = "v0.0.5.1";
 
         public override void Exit()
         {
@@ -23,27 +23,7 @@ namespace GungeonAPI
             try
             {
                 GungeonAPI.Init();
-
-                //define shrine
-                ShrineFactory sf = new ShrineFactory()
-                {
-                    name = "SpinShrine",
-                    modID = "kts",
-                    text = "Spin to win?",
-                    spritePath = "resource/shrine_no_gun_001.png",
-                    room = RoomFactory.BuildFromResource("resource/rooms/ShrineRoom.room"),
-                    acceptText = "Accept",
-                    declineText = "Decline",
-                    OnAccept = (p) => { Tools.Print("Accept"); },
-                    OnDecline = (p) => { Tools.Print("Decline"); },
-                    //offset = new Vector3(43.8f, 42.4f, 42.9f),
-                    offset = new Vector3(10, 0, 0),
-                    talkPointOffset = new Vector3(0, 3, 0),
-                    isToggle = true,
-                    isBreachShrine = false
-                };
-                //register shrine
-                sf.Build();
+                KeyShrine.Add();
 
                 //Enable the debug flow
                 ETGModConsole.Commands.AddUnit("debugflow", (args) =>
@@ -111,10 +91,10 @@ namespace GungeonAPI
             var player = GameManager.Instance.PrimaryPlayer;
             Tools.Log("b");
 
-            var shrines = GameObject.FindObjectsOfType<ShrineFactory.CustomShrineData>();
+            var shrines = GameObject.FindObjectsOfType<ShrineFactory.CustomShrineController>();
             Tools.Log("c");
             float dist = float.MaxValue, d;
-            ShrineFactory.CustomShrineData closest = null;
+            ShrineFactory.CustomShrineController closest = null;
             foreach (var shrine in shrines)
             {
                 Tools.Log("d");

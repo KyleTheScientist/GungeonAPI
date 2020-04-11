@@ -10,6 +10,7 @@ namespace GungeonAPI
         public static void Init()
         {
             Tools.Init();
+            StaticReferences.Init();
             FakePrefabHooks.Init();
             ShrineFactory.Init();
             DungeonHandler.Init();

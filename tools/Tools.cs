@@ -16,9 +16,6 @@ namespace GungeonAPI
     {
         public static bool verbose = true;
         private static string defaultLog = Path.Combine(ETGMod.ResourcesDirectory, "gungeonAPI.txt");
-
-        public static AssetBundle sharedAuto1 = ResourceManager.LoadAssetBundle("shared_auto_001");
-        public static AssetBundle sharedAuto2 = ResourceManager.LoadAssetBundle("shared_auto_002");
         public static string modID = "GAPI";
 
         private static Dictionary<string, float> timers = new Dictionary<string, float>();
@@ -31,7 +28,11 @@ namespace GungeonAPI
         public static void Print<T>(T obj, string color = "FFFFFF", bool force = false)
         {
             if (verbose || force)
-                ETGModConsole.Log($"<color=#{color}>[{modID}] {obj.ToString()}</color>");
+            {
+                string[] lines = obj.ToString().Split('\n');
+                foreach (var line in lines)
+                    LogToConsole($"<color=#{color}>[{modID}] {line}</color>");
+            }
 
             Log(obj.ToString());
         }
@@ -39,22 +40,28 @@ namespace GungeonAPI
         public static void PrintRaw<T>(T obj, bool force = false)
         {
             if (verbose || force)
-                ETGModConsole.Log(obj.ToString());
+                LogToConsole(obj.ToString());
 
             Log(obj.ToString());
         }
 
         public static void PrintError<T>(T obj, string color = "FF0000")
         {
-            ETGModConsole.Log($"<color=#{color}>[{modID}] {obj.ToString()}</color>");
+            string[] lines = obj.ToString().Split('\n');
+            foreach (var line in lines)
+                LogToConsole($"<color=#{color}>[{modID}] {line}</color>");
 
             Log(obj.ToString());
         }
 
         public static void PrintException(Exception e, string color = "FF0000")
         {
-            ETGModConsole.Log($"<color=#{color}>[{modID}] {e.Message}</color>");
-            ETGModConsole.Log(e.StackTrace);
+            string message = e.Message + "\n" + e.StackTrace;
+            {
+                string[] lines = message.Split('\n');
+                foreach (var line in lines)
+                    LogToConsole($"<color=#{color}>[{modID}] {line}</color>");
+            }
 
             Log(e.Message);
             Log("\t" + e.StackTrace);
@@ -76,6 +83,13 @@ namespace GungeonAPI
                 writer.WriteLine(obj.ToString());
             }
         }
+
+        public static void LogToConsole(string message)
+        {
+            message.Replace("\t", "    ");
+            ETGModConsole.Log(message);
+        }
+
         private static void BreakdownComponentsInternal(this GameObject obj, int lvl = 0)
         {
             string space = "";
@@ -112,12 +126,18 @@ namespace GungeonAPI
             File.WriteAllBytes(Path.Combine(path, texture.name + ".png"), ((Texture2D)texture).EncodeToPNG());
         }
 
+        public static T GetEnumValue<T>(string val) where T : Enum
+        {
+            return (T)Enum.Parse(typeof(T), val.ToUpper());
+        }
+
         public static void LogPropertiesAndFields<T>(T obj, string header = "")
         {
             Log(header);
             Log("=======================");
-            if(obj == null) { Log("LogPropertiesAndFields: Null object"); return; }
+            if (obj == null) { Log("LogPropertiesAndFields: Null object"); return; }
             Type type = obj.GetType();
+            Log($"Type: {type}");
             PropertyInfo[] pinfos = type.GetProperties();
             Log($"{typeof(T)} Properties: ");
             foreach (var pinfo in pinfos)
@@ -131,7 +151,7 @@ namespace GungeonAPI
                     {
                         var list = value as List<object>;
                         valueString = $"List[{list.Count}]";
-                        foreach(var subval in list)
+                        foreach (var subval in list)
                         {
                             valueString += "\n\t\t" + subval.ToString();
                         }

@@ -22,7 +22,8 @@ namespace GungeonAPI
             flow.AddNodeToFlow(hub, flow.FirstNode);
             foreach (var room in RoomFactory.rooms.Values)
             {
-                customRoom = new DungeonFlowNode(flow) { overrideExactRoom = room };
+                Tools.Log("Adding room to flow: " + room.room);
+                customRoom = new DungeonFlowNode(flow) { overrideExactRoom = room.room };
                 flow.AddNodeToFlow(customRoom, lastNode);
                 hub = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.CreateEmptyRoom() };
                 flow.AddNodeToFlow(hub, customRoom);
@@ -83,7 +84,7 @@ namespace GungeonAPI
             var entrance = NodeFromAssetName(flow, "elevator entrance");
             flow.FirstNode = entrance;
             flow.AddNodeToFlow(entrance, null);
-            var maze = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.BuildFromResource("resource/rooms/maze.room") };
+            var maze = new DungeonFlowNode(flow) { overrideExactRoom = RoomFactory.BuildFromResource("resource/rooms/maze.room").room };
             flow.AddNodeToFlow(maze, entrance);
             flow.AddNodeToFlow(NodeFromAssetName(flow, "exit_room_basic"), maze);
             dungeon = null;
@@ -128,9 +129,7 @@ namespace GungeonAPI
             if (name.Contains('/'))
                 asset = name.Substring(name.LastIndexOf('/') + 1).Replace(".asset", "").Trim();
 
-            var room = Tools.sharedAuto2.LoadAsset(asset) as PrototypeDungeonRoom; //check both assetbundles
-            if (room == null)
-                room = Tools.sharedAuto1.LoadAsset(asset) as PrototypeDungeonRoom;
+            var room = StaticReferences.GetAsset<PrototypeDungeonRoom>(asset); //check both assetbundles
             return room;
         }
 

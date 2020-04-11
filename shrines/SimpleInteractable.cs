@@ -9,11 +9,12 @@ namespace GungeonAPI
 {
     public class SimpleInteractable : BraveBehaviour, IPlayerInteractable
     {
-        public Action<PlayerController> OnAccept, OnDecline;
+        public Action<PlayerController, GameObject> OnAccept, OnDecline;
+        public Func<PlayerController, GameObject, bool> CanUse;
         public Transform talkPoint;
         public string text, acceptText, declineText;
         public bool isToggle;
-        private bool m_isToggled;
+        private bool m_isToggled, m_canUse = true;
 
         void Start()
         {
@@ -25,6 +26,9 @@ namespace GungeonAPI
         {
             if (TextBoxManager.HasTextBox(this.talkPoint))
                 return;
+
+            Tools.Print("Can use: " + (CanUse == null));
+            m_canUse = CanUse != null ? CanUse.Invoke(interactor, this.gameObject) : m_canUse;
             StartCoroutine(this.HandleConversation(interactor));
         }
 
@@ -37,7 +41,11 @@ namespace GungeonAPI
             yield return null;
 
             // Wait for player response
-            if (isToggle)
+            if (!m_canUse)
+            {
+                GameUIRoot.Instance.DisplayPlayerConversationOptions(interactor, null, declineText, string.Empty);
+            }
+            else if (isToggle)
             {
                 if (m_isToggled)
                     GameUIRoot.Instance.DisplayPlayerConversationOptions(interactor, null, declineText, string.Empty);
@@ -58,17 +66,20 @@ namespace GungeonAPI
             // Free player and run OnAccept/OnDecline actions
             interactor.ClearInputOverride("shrineConversation");
             TextBoxManager.ClearTextBox(this.talkPoint);
+            if (!m_canUse)
+                yield break;
+
             if (selectedResponse == 0 && isToggle)
             {
-                (m_isToggled ? OnDecline : OnAccept)?.Invoke(interactor);
+                (m_isToggled ? OnDecline : OnAccept)?.Invoke(interactor, this.gameObject);
                 m_isToggled = !m_isToggled;
                 yield break;
             }
 
             if (selectedResponse == 0)
-                OnAccept?.Invoke(interactor);
+                OnAccept?.Invoke(interactor, this.gameObject);
             else
-                OnDecline?.Invoke(interactor);
+                OnDecline?.Invoke(interactor, this.gameObject);
             yield break;
         }
 

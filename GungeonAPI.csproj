@@ -73,39 +73,21 @@
     <Compile Include="dungeongen\OfficialFlows.cs" />
     <Compile Include="dungeongen\RoomFactory.cs" />
     <Compile Include="dungeongen\SampleFlow.cs" />
+    <Compile Include="dungeongen\StaticReferences.cs" />
     <Compile Include="GungeonAPI.cs" />
     <Compile Include="shrines\HitboxMonitor.cs" />
+    <Compile Include="shrines\KeyShrine.cs" />
     <Compile Include="shrines\ShrineFactory.cs" />
     <Compile Include="shrines\SimpleInteractable.cs" />
     <Compile Include="tools\FakePrefab.cs" />
     <Compile Include="tools\FakePrefabHooks.cs" />
     <Compile Include="tools\ResourceExtractor.cs" />
-    <Compile Include="ExampleShrineModule.cs" />
+    <Compile Include="GAPIModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="dungeongen\DungeonHandler.cs" />
     <Compile Include="tools\SpriteBuilder.cs" />
     <Compile Include="tools\TextureStitcher.cs" />
     <Compile Include="tools\Tools.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\gun_shrine_foyer_001.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resource\shrine_ammo_001.png" />
-    <EmbeddedResource Include="resource\shrine_Artemissile_001.png" />
-    <EmbeddedResource Include="resource\shrine_blank_001.png" />
-    <EmbeddedResource Include="resource\shrine_blood_blood_001.png" />
-    <EmbeddedResource Include="resource\shrine_Dagun_001.png" />
-    <EmbeddedResource Include="resource\shrine_death_001.png" />
-    <EmbeddedResource Include="resource\shrine_eyeless_001.png" />
-    <EmbeddedResource Include="resource\shrine_hero_001.png" />
-    <EmbeddedResource Include="resource\shrine_lead_001.png" />
-    <EmbeddedResource Include="resource\shrine_Loadin_001.png" />
-    <EmbeddedResource Include="resource\shrine_LordofJammed_001.png" />
-    <EmbeddedResource Include="resource\shrine_no_gun_001.png" />
-    <EmbeddedResource Include="resource\shrine_peace_001.png" />
-    <EmbeddedResource Include="resource\shrine_shield_heart_001.png" />
-    <EmbeddedResource Include="resource\shrine_snakechamber_001.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="resource\rooms\maze.room" />
@@ -121,7 +103,10 @@
     <EmbeddedResource Include="resource\rooms\EmptyRoom.room" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="resource\rooms\ShrineRoom.room" />
+    <EmbeddedResource Include="resource\shrine_heart_key.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resource\rooms\KeyShrine.room" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
