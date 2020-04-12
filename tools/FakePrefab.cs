@@ -74,12 +74,10 @@ namespace GungeonAPI
             if (o is GameObject && ExistingFakePrefabs.Contains((GameObject)o))
             {
                 ((GameObject)new_o).SetActive(true);
-                Tools.Print(new_o.name + ": " + ((GameObject)new_o).gameObject.activeSelf);
             }
             else if (o is Component && ExistingFakePrefabs.Contains(((Component)o).gameObject))
             {
                 ((Component)new_o).gameObject.SetActive(true);
-                Tools.Print(new_o.name + ": " + ((Component)new_o).gameObject.activeSelf);
             }
             return new_o;
         }

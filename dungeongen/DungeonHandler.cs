@@ -35,7 +35,7 @@ namespace GungeonAPI
         public static void OnPreDungeonGen(LoopDungeonGenerator generator, Dungeon dungeon, DungeonFlow flow, int dungeonSeed)
         {
             Tools.Print("Attempting to override floor layout...", "5599FF");
-            CollectDataForAnalysis(flow, dungeon);
+            //CollectDataForAnalysis(flow, dungeon);
             if (flow.name != "Foyer Flow" && !GameManager.IsReturningToFoyerWithPlayer)
             {
                 if (debugFlow)
@@ -82,12 +82,20 @@ namespace GungeonAPI
                     //TODO - Boss rooms
                     break;
                 default:
-                    //foreach (var p in room.prerequisites)
-                    //    if (p.requireTileset)
-                    //        StaticReferences.GetRoomTable(p.requiredTileset).includedRooms.Add(wRoom);
+                    var tilesetPrereqs = new List<DungeonPrerequisite>();
+                    foreach (var p in room.prerequisites)
+                    {
+                        if (p.requireTileset)
+                        {
+                            StaticReferences.GetRoomTable(p.requiredTileset).includedRooms.Add(wRoom);
+                            tilesetPrereqs.Add(p);
+                        }
+                    }
+                    foreach(var p in tilesetPrereqs)
+                        room.prerequisites.Remove(p);
                     break;
             }
-            Tools.Print($"Registering {roomData.room.name} with weight {wRoom.weight} as {roomData.category}");
+            //Tools.Print($"Registering {roomData.room.name} with weight {wRoom.weight} as {roomData.category}");
         }
 
         public static ProceduralFlowModifierData GetFlowModifier(RoomData roomData)
@@ -135,19 +143,9 @@ namespace GungeonAPI
         {
             try
             {
-                foreach (var table in flow.fallbackRoomTable.includedRoomTables)
+                foreach (var room in flow.fallbackRoomTable.includedRooms.elements)
                 {
-                    Tools.Print("Fallback table: " + table.name);
-                }
-
-                foreach (var table in flow.evolvedRoomTable.includedRoomTables)
-                {
-                    Tools.Print("Evolved table: " + table.name);
-                }
-
-                foreach (var table in flow.phantomRoomTable.includedRoomTables)
-                {
-                    Tools.Print("Phantom table: " + table.name);
+                    Tools.Print("Fallback table: " + room?.room?.name);
                 }
             }
             catch (Exception e)

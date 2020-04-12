@@ -8,7 +8,7 @@ namespace GungeonAPI
 {
     public class GAPIModule : ETGModule
     {
-        public static readonly string VERSION = "v0.0.5.1";
+        public static readonly string VERSION = "v0.0.6";
 
         public override void Exit()
         {

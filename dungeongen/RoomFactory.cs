@@ -230,7 +230,6 @@ namespace GungeonAPI
         {
             try
             {
-                Tools.Print("  Create Empty Room...", "5599FF");
                 PrototypeDungeonRoom room = GetNewPrototypeDungeonRoom(width, height);
                 AddExit(room, new Vector2(width / 2, height), DungeonData.Direction.NORTH);
                 AddExit(room, new Vector2(width / 2, 0), DungeonData.Direction.SOUTH);
@@ -308,7 +307,7 @@ namespace GungeonAPI
                         }
                         }
                     });
-                    Tools.Print($"Added {asset.name} to room.");
+                    //Tools.Print($"Added {asset.name} to room.");
                 }
                 else
                 {

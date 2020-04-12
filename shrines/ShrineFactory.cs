@@ -237,7 +237,6 @@ namespace GungeonAPI
             void Start()
             {
                 string id = this.name.Replace("(Clone)", "");
-                Tools.Print($"Starting shrine {id} | Found in dict: {ShrineFactory.builtShrines.ContainsKey(id)}");
 
                 if (ShrineFactory.builtShrines.ContainsKey(id))
                     Copy(ShrineFactory.builtShrines[id].GetComponent<CustomShrineController>());
@@ -273,7 +272,6 @@ namespace GungeonAPI
                 this.m_instanceMinimapIcon = Minimap.Instance.RegisterRoomIcon(this.m_parentRoom, (GameObject)BraveResources.Load("Global Prefabs/Minimap_Shrine_Icon", ".prefab"), false);
             }
 
-            // Token: 0x06005F13 RID: 24339 RVA: 0x002482C8 File Offset: 0x002464C8
             public void GetRidOfMinimapIcon()
             {
                 if (this.m_instanceMinimapIcon != null)

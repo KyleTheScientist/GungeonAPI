@@ -14,7 +14,7 @@ namespace GungeonAPI
     //Utility methods
     public static class Tools
     {
-        public static bool verbose = true;
+        public static bool verbose = false;
         private static string defaultLog = Path.Combine(ETGMod.ResourcesDirectory, "gungeonAPI.txt");
         public static string modID = "GAPI";
 

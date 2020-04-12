@@ -19,21 +19,28 @@ namespace GungeonAPI
 
             { "gungeon", "Gungeon_RoomTable" },
             { "castle", "Castle_RoomTable" },
-            //{ "mines", "Mines_RoomTable" },
-            //{ "catacombs", "Catacomb_RoomTable" },
-            //{ "forge", "Forge_RoomTable" },
-            //{ "sewer", "Sewer_RoomTable" },
-            //{ "cathedral", "Cathedral_RoomTable" },
-            //{ "bullet_hell", "BulletHell_RoomTable" },
+            { "mines", "Mines_RoomTable" },
+            { "catacombs", "Catacomb_RoomTable" },
+            { "forge", "Forge_RoomTable" },
+            { "sewer", "Sewer_RoomTable" },
+            { "cathedral", "Cathedral_RoomTable" },
+            { "bullethell", "BulletHell_RoomTable" },
         };
 
         public static string[] assetBundleNames = new string[]
         {
             "shared_auto_001",
             "shared_auto_002",
-            //"foyer_001",
-            //"foyer_002",
-            //"foyer_003",
+        };
+
+        public static string[] dungeonPrefabNames = new string[]
+        {
+            "base_mines",
+            "base_catacombs",
+            "base_forge",
+            "base_sewer",
+            "base_cathedral",
+            "base_bullethell",
         };
 
         public static void Init()
@@ -42,17 +49,35 @@ namespace GungeonAPI
             AssetBundles = new Dictionary<string, AssetBundle>();
             foreach (var name in assetBundleNames)
             {
-                AssetBundles.Add(name, ResourceManager.LoadAssetBundle(name));
+                try
+                {
+                    var bundle = ResourceManager.LoadAssetBundle(name);
+                    AssetBundles.Add(name, ResourceManager.LoadAssetBundle(name));
+                }
+                catch (Exception e)
+                {
+                    Tools.PrintError($"Failed to load asset bundle: {name}");
+                    Tools.PrintException(e);
+                }
             }
+
 
             RoomTables = new Dictionary<string, GenericRoomTable>();
             foreach (var entry in roomTableMap)
             {
-                var table = GetAsset<GenericRoomTable>(entry.Value);
-                RoomTables.Add(entry.Key, table);
-                Tools.Log(table.name);
-                foreach (var r in table.includedRooms.elements)
-                    Tools.Log($"\t{r.room}");
+                try
+                {
+                    var table = GetAsset<GenericRoomTable>(entry.Value);
+                    if (table == null)
+                        table = DungeonDatabase.GetOrLoadByName($"base_{entry.Key}").PatternSettings.flows[0].fallbackRoomTable;
+                    RoomTables.Add(entry.Key, table);
+                    //Tools.Log(table.name);
+                }
+                catch (Exception e)
+                {
+                    Tools.PrintError($"Failed to load room table: {entry.Key}:{entry.Value}");
+                    Tools.PrintException(e);
+                }
             }
             Tools.Print("Static references initialized.");
         }
@@ -76,7 +101,7 @@ namespace GungeonAPI
                 case GlobalDungeonData.ValidTilesets.CATHEDRALGEON:
                     return RoomTables["cathedral"];
                 case GlobalDungeonData.ValidTilesets.HELLGEON:
-                    return RoomTables["bullet_hell"];
+                    return RoomTables["bullethell"];
                 default:
                     return RoomTables["gungeon"];
             }
