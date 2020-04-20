@@ -149,28 +149,29 @@ namespace GungeonAPI
             DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
             Vector2 position = new Vector2(protoroom.Width / 2 + offset.x, protoroom.Height / 2 + offset.y);
             protoroom.placedObjectPositions.Add(position);
+
+            var placeableContents = ScriptableObject.CreateInstance<DungeonPlaceable>();
+            placeableContents.width = 2;
+            placeableContents.height = 2;
+            placeableContents.respectsEncounterableDifferentiator = true;
+            placeableContents.variantTiers = new List<DungeonPlaceableVariant>()
+            {
+                new DungeonPlaceableVariant()
+                {
+                    percentChance = 1,
+                    nonDatabasePlaceable = shrine,
+                    prerequisites = emptyReqs,
+                    materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
+                }
+            };
+
             protoroom.placedObjects.Add(new PrototypePlacedObjectData()
             {
                 contentsBasePosition = position,
                 fieldData = new List<PrototypePlacedObjectFieldData>(),
                 instancePrerequisites = emptyReqs,
                 linkedTriggerAreaIDs = new List<int>(),
-                placeableContents = new DungeonPlaceable()
-                {
-                    width = 2,
-                    height = 2,
-                    respectsEncounterableDifferentiator = true,
-                    variantTiers = new List<DungeonPlaceableVariant>()
-                    {
-                        new DungeonPlaceableVariant()
-                        {
-                            percentChance = 1,
-                            nonDatabasePlaceable = shrine,
-                            prerequisites = emptyReqs,
-                            materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
-                        }
-                    }
-                }
+                placeableContents = placeableContents
             });
 
             var data = new RoomFactory.RoomData()
@@ -178,7 +179,7 @@ namespace GungeonAPI
                 room = protoroom,
                 isSpecialRoom = true,
                 category = "SPECIAL",
-                specialSubCatergory = "UNSPECIFIED_SPECIAL"
+                specialSubCategory = "UNSPECIFIED_SPECIAL"
             };
             RoomFactory.rooms.Add(ID, data);
             DungeonHandler.Register(data);

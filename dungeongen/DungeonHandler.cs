@@ -35,7 +35,7 @@ namespace GungeonAPI
         public static void OnPreDungeonGen(LoopDungeonGenerator generator, Dungeon dungeon, DungeonFlow flow, int dungeonSeed)
         {
             Tools.Print("Attempting to override floor layout...", "5599FF");
-            //CollectDataForAnalysis(flow, dungeon);
+            CollectDataForAnalysis(flow, dungeon);
             if (flow.name != "Foyer Flow" && !GameManager.IsReturningToFoyerWithPlayer)
             {
                 if (debugFlow)
@@ -59,6 +59,7 @@ namespace GungeonAPI
                 weight = roomData.weight == 0 ? GlobalRoomWeight : roomData.weight
             };
 
+            bool success = false;
             switch (room.category)
             {
                 case RoomCategory.SPECIAL:
@@ -66,56 +67,104 @@ namespace GungeonAPI
                     {
                         case RoomSpecialSubCategory.STANDARD_SHOP:  //shops
                             StaticReferences.RoomTables["shop"].includedRooms.Add(wRoom);
+                            Tools.Print($"Registering {roomData.room.name} with weight {wRoom.weight} as {roomData.category}:{roomData.specialSubCategory}");
+                            success = true;
                             break;
                         case RoomSpecialSubCategory.WEIRD_SHOP:    //subshops
-                            StaticReferences.subShopTable.InjectionData.Add(GetFlowModifier(roomData));
+                            StaticReferences.subShopTable.InjectionData.AddRange(GetFlowModifier(roomData));
+                            Tools.Print($"Registering {roomData.room.name} with weight {wRoom.weight} as {roomData.category}:{roomData.specialSubCategory}");
+                            success = true;
                             break;
                         default:
                             StaticReferences.RoomTables["special"].includedRooms.Add(wRoom);
+                            Tools.Print($"Registering {roomData.room.name} with weight {wRoom.weight} as {roomData.category}:{roomData.specialSubCategory}");
+                            success = true;
                             break;
                     }
                     break;
                 case RoomCategory.SECRET:
                     StaticReferences.RoomTables["secret"].includedRooms.Add(wRoom);
+                    success = true;
                     break;
                 case RoomCategory.BOSS:
-                    //TODO - Boss rooms
+                    // TODO
                     break;
                 default:
-                    var tilesetPrereqs = new List<DungeonPrerequisite>();
                     foreach (var p in room.prerequisites)
-                    {
                         if (p.requireTileset)
-                        {
                             StaticReferences.GetRoomTable(p.requiredTileset).includedRooms.Add(wRoom);
-                            tilesetPrereqs.Add(p);
-                        }
-                    }
-                    foreach(var p in tilesetPrereqs)
-                        room.prerequisites.Remove(p);
+                    success = true;
                     break;
             }
-            //Tools.Print($"Registering {roomData.room.name} with weight {wRoom.weight} as {roomData.category}");
+
+            RemoveTilesetPrereqs(room);
+
+            if (success)
+                Tools.Print($"Registering {roomData.room.name} with weight {wRoom.weight} as {roomData.category}");
         }
 
-        public static ProceduralFlowModifierData GetFlowModifier(RoomData roomData)
+        public static List<ProceduralFlowModifierData> GetFlowModifier(RoomData roomData)
         {
-            ProceduralFlowModifierData flowData = new ProceduralFlowModifierData()
+            var room = roomData.room;
+            List<ProceduralFlowModifierData> data = new List<ProceduralFlowModifierData>();
+            var tilesetPrereqs = new List<DungeonPrerequisite>();
+            foreach (var p in room.prerequisites)
             {
-
-                annotation = roomData.room.name,
-                placementRules = new List<ProceduralFlowModifierData.FlowModifierPlacementType>()
+                if (p.requireTileset)
                 {
-                    ProceduralFlowModifierData.FlowModifierPlacementType.END_OF_CHAIN,
-                    ProceduralFlowModifierData.FlowModifierPlacementType.HUB_ADJACENT_NO_LINK
-                },
-                exactRoom = roomData.room,
-                selectionWeight = roomData.weight,
-                chanceToSpawn = 1,
-                prerequisites = roomData.room.prerequisites.ToArray(),
-                CanBeForcedSecret = true,
-            };
-            return flowData;
+                    data.Add(new ProceduralFlowModifierData()
+                    {
+
+                        annotation = room.name,
+                        placementRules = new List<ProceduralFlowModifierData.FlowModifierPlacementType>()
+                        {
+                            ProceduralFlowModifierData.FlowModifierPlacementType.END_OF_CHAIN,
+                            ProceduralFlowModifierData.FlowModifierPlacementType.HUB_ADJACENT_NO_LINK,
+                        },
+                        exactRoom = room,
+                        selectionWeight = roomData.weight,
+                        chanceToSpawn = 1,
+                        prerequisites = new DungeonPrerequisite[] { p }, //doesn't include all the other prereqs, pls fix
+                        CanBeForcedSecret = true,
+                    });
+                }
+            }
+
+            RemoveTilesetPrereqs(room);
+            if (data.Count == 0)
+            {
+                data.Add(new ProceduralFlowModifierData()
+                {
+
+                    annotation = room.name,
+                    placementRules = new List<ProceduralFlowModifierData.FlowModifierPlacementType>()
+                        {
+                            ProceduralFlowModifierData.FlowModifierPlacementType.END_OF_CHAIN,
+                            ProceduralFlowModifierData.FlowModifierPlacementType.HUB_ADJACENT_NO_LINK,
+                        },
+                    exactRoom = room,
+                    selectionWeight = roomData.weight,
+                    chanceToSpawn = 1,
+                    prerequisites = new DungeonPrerequisite[0], //doesn't include all the other prereqs, pls fix
+                    CanBeForcedSecret = true,
+                });
+            }
+
+
+            return data;
+        }
+
+        public static void RemoveTilesetPrereqs(PrototypeDungeonRoom room)
+        {
+            var tilesetPrereqs = new List<DungeonPrerequisite>();
+            foreach (var p in room.prerequisites)
+            {
+                if (p.requireTileset)
+                    tilesetPrereqs.Add(p);
+            }
+
+            foreach (var p in tilesetPrereqs)
+                room.prerequisites.Remove(p);
         }
 
         public static bool BelongsOnThisFloor(RoomData data, string dungeonName)
@@ -134,8 +183,20 @@ namespace GungeonAPI
             foreach (var entry in GameManager.Instance.GlobalInjectionData.entries)
                 if (entry.injectionData?.InjectionData != null)
                     foreach (var data in entry.injectionData.InjectionData)
-                        if (data.roomTable != null && data.roomTable.name.ToLower().Contains("basic special rooms"))
-                            return data.roomTable;
+                    {
+                        if (data.exactRoom != null)
+                        {
+                            Tools.Log(data.exactRoom.name);
+
+                            if (data.prerequisites != null)
+                                foreach (var p in data.prerequisites)
+                                    Tools.Log("\t" + p.prerequisiteType);
+
+                            if (data.placementRules != null)
+                                foreach (var p in data.placementRules)
+                                    Tools.Log("\t" + p);
+                        }
+                    }
             return null;
         }
 
@@ -143,6 +204,7 @@ namespace GungeonAPI
         {
             try
             {
+                //GetSpecialRoomTable();
                 foreach (var room in flow.fallbackRoomTable.includedRooms.elements)
                 {
                     Tools.Print("Fallback table: " + room?.room?.name);

@@ -8,7 +8,7 @@ namespace GungeonAPI
 {
     public class GAPIModule : ETGModule
     {
-        public static readonly string VERSION = "v0.0.6";
+        public static readonly string VERSION = "v0.1.1";
 
         public override void Exit()
         {
@@ -31,7 +31,7 @@ namespace GungeonAPI
                     DungeonHandler.debugFlow = !DungeonHandler.debugFlow;
                     string status = DungeonHandler.debugFlow ? "enabled" : "disabled";
                     string color = DungeonHandler.debugFlow ? "00FF00" : "FF0000";
-                    Tools.Print($"Debug flow {status}", color);
+                    Tools.Print($"Debug flow {status}", color, true);
                 });
 
                 //This is useful for figuring out where you want your shrine to go in the breach
@@ -47,7 +47,7 @@ namespace GungeonAPI
                     Tools.BreakdownComponents(c);
                     Tools.LogPropertiesAndFields(c.GetComponent<SimpleInteractable>());
                 });
-                        
+
                 ETGModConsole.Commands.AddUnit("roomname", (args) =>
                 {
                     var room = GameManager.Instance.PrimaryPlayer.CurrentRoom;
@@ -57,9 +57,9 @@ namespace GungeonAPI
                 ETGModConsole.Commands.AddUnit("hidehitboxes", (args) => HitboxMonitor.DeleteHitboxDisplays());
                 ETGModConsole.Commands.AddUnit("showhitboxes", (args) =>
                 {
-                    foreach(var obj in GameObject.FindObjectsOfType<SpeculativeRigidbody>())
+                    foreach (var obj in GameObject.FindObjectsOfType<SpeculativeRigidbody>())
                     {
-                        if(obj && obj.sprite && Vector2.Distance(obj.sprite.WorldCenter, GameManager.Instance.PrimaryPlayer.sprite.WorldCenter) < 8)
+                        if (obj && obj.sprite && Vector2.Distance(obj.sprite.WorldCenter, GameManager.Instance.PrimaryPlayer.sprite.WorldCenter) < 8)
                         {
                             Tools.Log(obj?.name);
                             HitboxMonitor.DisplayHitbox(obj);
@@ -67,11 +67,11 @@ namespace GungeonAPI
                     }
                 });
 
-                Tools.Print($"GungeonAPI {VERSION} loaded.", "FF00FF", true);
+                Tools.Print($"Custom Rooms {VERSION} loaded.", "FF00FF", true);
             }
             catch (Exception e)
             {
-                Tools.Print("Failed to load GungeonAPI", "FF0000", true);
+                Tools.Print("Failed to load Custom Rooms Mod", "FF0000", true);
                 Tools.PrintException(e);
             }
         }
@@ -79,7 +79,7 @@ namespace GungeonAPI
         public void DumpEnemyDatabase()
         {
             Tools.Print("Dumping enemy database.");
-            for(int i = 0; i < EnemyDatabase.Instance.Entries.Count; i++)
+            for (int i = 0; i < EnemyDatabase.Instance.Entries.Count; i++)
             {
                 var entry = EnemyDatabase.Instance.Entries[i];
                 Tools.Log($"{entry.myGuid}\t{entry.name}\t{i}\t{entry.isNormalEnemy}\t{entry.isInBossTab}", "EnemyDump.txt");

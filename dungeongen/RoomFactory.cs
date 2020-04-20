@@ -16,12 +16,6 @@ namespace GungeonAPI
     {
         public static Dictionary<string, RoomData> rooms = new Dictionary<string, RoomData>();
         public static string roomDirectory = Path.Combine(ETGMod.GameFolder, "CustomRoomData");
-        public static AssetBundle[] assetBundles =
-        {
-            ResourceManager.LoadAssetBundle("shared_auto_001"),
-            ResourceManager.LoadAssetBundle("shared_auto_002")
-        };
-
         private static readonly string dataHeader = "***DATA***";
         private static FieldInfo m_cellData = typeof(PrototypeDungeonRoom).GetField("m_cellData", BindingFlags.Instance | BindingFlags.NonPublic);
         private static RoomEventDefinition sealOnEnterWithEnemies = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENTER_WITH_ENEMIES, RoomEventTriggerAction.SEAL_ROOM);
@@ -131,8 +125,8 @@ namespace GungeonAPI
                 room.subCategoryNormal = Tools.GetEnumValue<PrototypeDungeonRoom.RoomNormalSubCategory>(roomData.normalSubCategory);
             if (!string.IsNullOrEmpty(roomData.bossSubCategory))
                 room.subCategoryBoss = Tools.GetEnumValue<PrototypeDungeonRoom.RoomBossSubCategory>(roomData.bossSubCategory);
-            if (!string.IsNullOrEmpty(roomData.specialSubCatergory))
-                room.subCategorySpecial = Tools.GetEnumValue<PrototypeDungeonRoom.RoomSpecialSubCategory>(roomData.specialSubCatergory);
+            if (!string.IsNullOrEmpty(roomData.specialSubCategory))
+                room.subCategorySpecial = Tools.GetEnumValue<PrototypeDungeonRoom.RoomSpecialSubCategory>(roomData.specialSubCategory);
         }
 
         public static RoomData ExtractRoomDataFromFile(string path)
@@ -149,11 +143,14 @@ namespace GungeonAPI
 
         public static RoomData ExtractRoomData(string data)
         {
-            if (data.Contains(dataHeader))
+            int end = data.Length - dataHeader.Length - 1;
+            for (int i = end; i > 0; i--)
             {
-                string dataContent = data.Substring(data.IndexOf(dataHeader) + dataHeader.Length);
-                return JsonUtility.FromJson<RoomData>(dataContent);
+                string sub = data.Substring(i, dataHeader.Length);
+                if (sub.Equals(dataHeader))
+                    return JsonUtility.FromJson<RoomData>(data.Substring(i + dataHeader.Length));
             }
+            Tools.Log($"No room data found at {data}");
             return new RoomData();
         }
 
@@ -162,8 +159,7 @@ namespace GungeonAPI
             int width = texture.width;
             int height = texture.height;
             PrototypeDungeonRoom room = GetNewPrototypeDungeonRoom(width, height);
-            PrototypeDungeonRoomCellData[] cellData = m_cellData.GetValue(room) as PrototypeDungeonRoomCellData[];
-            cellData = new PrototypeDungeonRoomCellData[width * height];
+            PrototypeDungeonRoomCellData[] cellData = new PrototypeDungeonRoomCellData[width * height];
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -171,7 +167,7 @@ namespace GungeonAPI
                     cellData[x + y * width] = CellDataFromColor(texture.GetPixel(x, y));
                 }
             }
-            m_cellData.SetValue(room, cellData);
+            room.FullCellData = cellData;
             room.name = texture.name;
             return room;
         }
@@ -279,8 +275,40 @@ namespace GungeonAPI
         {
             try
             {
-                var asset = GetPlaceableFromBundles(assetPath);
+                GameObject asset = GetGameObjectFromBundles(assetPath);
                 if (asset)
+                {
+                    DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
+                    room.placedObjectPositions.Add(location);
+
+                    var placeableContents = ScriptableObject.CreateInstance<DungeonPlaceable>();
+                    placeableContents.width = 2;
+                    placeableContents.height = 2;
+                    placeableContents.respectsEncounterableDifferentiator = true;
+                    placeableContents.variantTiers = new List<DungeonPlaceableVariant>()
+                    {
+                        new DungeonPlaceableVariant()
+                            {
+                                percentChance = 1,
+                                nonDatabasePlaceable = asset,
+                                prerequisites = emptyReqs,
+                                materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
+                            }
+                    };
+
+                    room.placedObjects.Add(new PrototypePlacedObjectData()
+                    {
+                        contentsBasePosition = location,
+                        fieldData = new List<PrototypePlacedObjectFieldData>(),
+                        instancePrerequisites = emptyReqs,
+                        linkedTriggerAreaIDs = new List<int>(),
+                        placeableContents = placeableContents
+                    });
+                    //Tools.Print($"Added {asset.name} to room.");
+                    return;
+                }
+                DungeonPlaceable placeable = GetPlaceableFromBundles(assetPath);
+                if (placeable)
                 {
                     DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
                     room.placedObjectPositions.Add(location);
@@ -290,29 +318,13 @@ namespace GungeonAPI
                         fieldData = new List<PrototypePlacedObjectFieldData>(),
                         instancePrerequisites = emptyReqs,
                         linkedTriggerAreaIDs = new List<int>(),
-                        placeableContents = new DungeonPlaceable()
-                        {
-                            width = 2,
-                            height = 2,
-                            respectsEncounterableDifferentiator = true,
-                            variantTiers = new List<DungeonPlaceableVariant>()
-                        {
-                            new DungeonPlaceableVariant()
-                            {
-                                percentChance = 1,
-                                nonDatabasePlaceable = asset,
-                                prerequisites = emptyReqs,
-                                materialRequirements= new DungeonPlaceableRoomMaterialRequirement[0]
-                            }
-                        }
-                        }
+                        placeableContents = placeable
                     });
-                    //Tools.Print($"Added {asset.name} to room.");
+                    return;
                 }
-                else
-                {
-                    Tools.PrintError($"Unable to find asset in asset bundles: {assetPath}");
-                }
+
+                Tools.PrintError($"Unable to find asset in asset bundles: {assetPath}");
+
             }
             catch (Exception e)
             {
@@ -320,12 +332,24 @@ namespace GungeonAPI
             }
         }
 
-        public static GameObject GetPlaceableFromBundles(string assetPath)
+        public static DungeonPlaceable GetPlaceableFromBundles(string assetPath)
+        {
+            DungeonPlaceable placeable = null;
+            foreach (var bundle in StaticReferences.AssetBundles.Values)
+            {
+                placeable = bundle.LoadAsset<DungeonPlaceable>(assetPath);
+                if (placeable)
+                    break;
+            }
+            return placeable;
+        }
+
+        public static GameObject GetGameObjectFromBundles(string assetPath)
         {
             GameObject asset = null;
-            foreach (var bundle in assetBundles)
+            foreach (var bundle in StaticReferences.AssetBundles.Values)
             {
-                asset = bundle.LoadAsset(assetPath) as GameObject;
+                asset = bundle.LoadAsset<GameObject>(assetPath);
                 if (asset)
                     break;
             }
@@ -385,7 +409,8 @@ namespace GungeonAPI
                     {
                         layerIsReinforcementLayer = true,
                         placedObjects = new List<PrototypePlacedObjectData>(),
-                        placedObjectBasePositions = new List<Vector2>()
+                        placedObjectBasePositions = new List<Vector2>(),
+                        shuffle = false
                     };
                     room.additionalObjectLayers.Add(newLayer);
 
@@ -522,7 +547,7 @@ namespace GungeonAPI
             public string
                 category,
                 normalSubCategory,
-                specialSubCatergory,
+                specialSubCategory,
                 bossSubCategory;
             public Vector2[] enemyPositions;
             public string[] enemyGUIDs;

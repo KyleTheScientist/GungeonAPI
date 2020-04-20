@@ -15,8 +15,8 @@ namespace GungeonAPI
     public static class Tools
     {
         public static bool verbose = false;
-        private static string defaultLog = Path.Combine(ETGMod.ResourcesDirectory, "gungeonAPI.txt");
-        public static string modID = "GAPI";
+        private static string defaultLog = Path.Combine(ETGMod.ResourcesDirectory, "customRooms.txt");
+        public static string modID = "CR";
 
         private static Dictionary<string, float> timers = new Dictionary<string, float>();
 
