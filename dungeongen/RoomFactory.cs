@@ -9,41 +9,97 @@ using Dungeonator;
 using Random = UnityEngine.Random;
 using CustomShrineController = GungeonAPI.ShrineFactory.CustomShrineController;
 using FloorType = Dungeonator.CellVisualData.CellFloorType;
+using Ionic.Zip;
 
 namespace GungeonAPI
 {
     public static class RoomFactory
     {
         public static Dictionary<string, RoomData> rooms = new Dictionary<string, RoomData>();
-        public static string roomDirectory = Path.Combine(ETGMod.GameFolder, "CustomRoomData");
+        //public static string roomDirectory = Path.Combine(ETGMod.GameFolder, "CustomRoomData").Replace('/', Path.DirectorySeparatorChar);
         private static readonly string dataHeader = "***DATA***";
         private static FieldInfo m_cellData = typeof(PrototypeDungeonRoom).GetField("m_cellData", BindingFlags.Instance | BindingFlags.NonPublic);
         private static RoomEventDefinition sealOnEnterWithEnemies = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENTER_WITH_ENEMIES, RoomEventTriggerAction.SEAL_ROOM);
         private static RoomEventDefinition unsealOnRoomClear = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENEMIES_CLEARED, RoomEventTriggerAction.UNSEAL_ROOM);
 
-
+        public static string RoomDirectory()
+        {
+            return Path.GetFullPath(Path.Combine(ETGMod.GameFolder, "CustomRoomData")) + Path.DirectorySeparatorChar;
+        }
 
         public static void LoadRoomsFromRoomDirectory()
         {
+            string roomDirectory = RoomDirectory();
             Directory.CreateDirectory(roomDirectory);
-            foreach (string f in Directory.GetFiles(roomDirectory))
+            foreach (string f in Directory.GetFiles(roomDirectory, "*", SearchOption.AllDirectories))
             {
-                if (!f.EndsWith(".room")) continue;
-                string name = Path.GetFileName(f);
-                Tools.Log($"Found room: \"{name}\"");
-                var roomData = BuildFromFile(f);
-                DungeonHandler.Register(roomData);
-                rooms.Add(name, roomData);
+                if (f.EndsWith(".room", StringComparison.OrdinalIgnoreCase))
+                {
+                    string name = Path.GetFullPath(f).RemovePrefix(roomDirectory).RemoveSuffix(".room");
+                    Tools.Log($"Found room: \"{name}\"");
+                    var roomData = BuildFromRoomFile(f);
+                    DungeonHandler.Register(roomData);
+                    rooms.Add(name, roomData);
+                }
+                else if (f.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    Tools.Log($"Found zipped rooms: \"{f}\"");
+                    var roomsData = BuildFromZipFile(f);
+                    foreach (var roomData in roomsData)
+                    {
+                        string name = roomData.room.name;
+                        Tools.Log($"Found room: \"{name}\"");
+                        DungeonHandler.Register(roomData);
+                        rooms.Add(roomData.room.name, roomData);
+                    }
+                }
             }
         }
 
-        public static RoomData BuildFromFile(string roomPath)
+        public static RoomData BuildFromRoomFile(string roomPath)
         {
             var texture = ResourceExtractor.GetTextureFromFile(roomPath, ".room");
             texture.name = Path.GetFileName(roomPath);
             RoomData roomData = ExtractRoomDataFromFile(roomPath);
             roomData.room = Build(texture, roomData);
             return roomData;
+        }
+
+        public static IEnumerable<RoomData> BuildFromZipFile(string zipFilePath)
+        {
+            if (!ZipFile.IsZipFile(zipFilePath))
+            {
+                Tools.Log($"Not a valid zip file!");
+                yield break;
+            }
+
+            using (var zipFile = ZipFile.Read(zipFilePath))
+            {
+                foreach (var entry in zipFile.Entries)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(entry.FileName);
+                    var extension = Path.GetExtension(entry.FileName);
+                    if (!string.Equals(extension, ".room", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    byte[] zipData;
+                    int capacity = (int)entry.UncompressedSize;
+                    if (capacity < 0)
+                        continue;
+
+                    using (var ms = new MemoryStream(capacity))
+                    {
+                        entry.Extract(ms);
+                        zipData = ms.ToArray();
+                    }
+
+                    var texture = ResourceExtractor.BytesToTexture(zipData, fileName);
+                    var roomData = ExtractRoomDataFromBytes(zipData);
+                    roomData.room = Build(texture, roomData);
+
+                    yield return roomData;
+                }
+            }
         }
 
         public static RoomData BuildFromResource(string roomPath)
@@ -58,7 +114,6 @@ namespace GungeonAPI
         {
             try
             {
-
                 var room = CreateRoomFromTexture(texture);
                 ApplyRoomData(room, roomData);
                 room.UpdatePrecalculatedData();
@@ -95,7 +150,7 @@ namespace GungeonAPI
             {
                 for (int i = 0; i < roomData.enemyPositions.Length; i++)
                 {
-                    AddEnemyToRoom(room, roomData.enemyPositions[i], roomData.enemyGUIDs[i], roomData.enemyReinforcementLayers[i]);
+                    AddEnemyToRoom(room, roomData.enemyPositions[i], roomData.enemyGUIDs[i], roomData.enemyReinforcementLayers[i], roomData.randomizeEnemyPositions);
                 }
             }
 
@@ -127,18 +182,29 @@ namespace GungeonAPI
                 room.subCategoryBoss = Tools.GetEnumValue<PrototypeDungeonRoom.RoomBossSubCategory>(roomData.bossSubCategory);
             if (!string.IsNullOrEmpty(roomData.specialSubCategory))
                 room.subCategorySpecial = Tools.GetEnumValue<PrototypeDungeonRoom.RoomSpecialSubCategory>(roomData.specialSubCategory);
+
+            room.usesProceduralDecoration = true;
+            room.allowFloorDecoration = roomData.doFloorDecoration;
+            room.allowWallDecoration = roomData.doWallDecoration;
+            room.usesProceduralLighting = roomData.doLighting;
+        }
+
+        public static RoomData ExtractRoomDataFromBytes(byte[] data)
+        {
+            string stringData = ResourceExtractor.BytesToString(data);
+            return ExtractRoomData(stringData);
         }
 
         public static RoomData ExtractRoomDataFromFile(string path)
         {
-            string data = ResourceExtractor.BytesToString(File.ReadAllBytes(path));
-            return ExtractRoomData(data);
+            byte[] data = File.ReadAllBytes(path);
+            return ExtractRoomDataFromBytes(data);
         }
 
         public static RoomData ExtractRoomDataFromResource(string path)
         {
-            string data = ResourceExtractor.BytesToString(ResourceExtractor.ExtractEmbeddedResource(path));
-            return ExtractRoomData(data);
+            byte[] data = ResourceExtractor.ExtractEmbeddedResource(path);
+            return ExtractRoomDataFromBytes(data);
         }
 
         public static RoomData ExtractRoomData(string data)
@@ -356,7 +422,7 @@ namespace GungeonAPI
             return asset;
         }
 
-        public static void AddEnemyToRoom(PrototypeDungeonRoom room, Vector2 location, string guid, int layer)
+        public static void AddEnemyToRoom(PrototypeDungeonRoom room, Vector2 location, string guid, int layer, bool shuffle)
         {
             DungeonPrerequisite[] emptyReqs = new DungeonPrerequisite[0];
 
@@ -386,7 +452,7 @@ namespace GungeonAPI
 
 
             if (layer > 0)
-                AddObjectDataToReinforcementLayer(room, objectData, layer - 1, location);
+                AddObjectDataToReinforcementLayer(room, objectData, layer - 1, location, shuffle);
             else
             {
                 room.placedObjects.Add(objectData);
@@ -399,7 +465,7 @@ namespace GungeonAPI
                 room.roomEvents.Add(unsealOnRoomClear);
         }
 
-        public static void AddObjectDataToReinforcementLayer(PrototypeDungeonRoom room, PrototypePlacedObjectData objectData, int layer, Vector2 location)
+        public static void AddObjectDataToReinforcementLayer(PrototypeDungeonRoom room, PrototypePlacedObjectData objectData, int layer, Vector2 location, bool shuffle)
         {
             if (room.additionalObjectLayers.Count <= layer)
             {
@@ -410,7 +476,7 @@ namespace GungeonAPI
                         layerIsReinforcementLayer = true,
                         placedObjects = new List<PrototypePlacedObjectData>(),
                         placedObjectBasePositions = new List<Vector2>(),
-                        shuffle = false
+                        shuffle = shuffle,
                     };
                     room.additionalObjectLayers.Add(newLayer);
 
@@ -559,6 +625,7 @@ namespace GungeonAPI
             public string[] floors;
             public float weight;
             public bool isSpecialRoom;
+            public bool randomizeEnemyPositions, doFloorDecoration, doWallDecoration, doLighting;
             [NonSerialized]
             public PrototypeDungeonRoom room;
         }

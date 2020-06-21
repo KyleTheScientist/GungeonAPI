@@ -20,7 +20,7 @@ namespace GungeonAPI
             { "forge", "Forge_RoomTable" },
             { "sewer", "Sewer_RoomTable" },
             { "cathedral", "Cathedral_RoomTable" },
-            { "bullethell", "BulletHell_RoomTable" }, 
+            { "bullethell", "BulletHell_RoomTable" },
         };
 
         public static Dictionary<string, string> specialRoomTableMap = new Dictionary<string, string>()
@@ -57,7 +57,7 @@ namespace GungeonAPI
                 try
                 {
                     var bundle = ResourceManager.LoadAssetBundle(name);
-                    if(bundle == null)
+                    if (bundle == null)
                     {
                         Tools.PrintError($"Failed to load asset bundle: {name}");
                         continue;
@@ -101,6 +101,7 @@ namespace GungeonAPI
             }
 
             subShopTable = AssetBundles["shared_auto_001"].LoadAsset<SharedInjectionData>("_global injected subshop table");
+
             //foreach(var data in subShopTable.InjectionData)
             //{
             //    Tools.LogPropertiesAndFields(data, data.annotation);

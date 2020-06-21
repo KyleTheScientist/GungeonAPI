@@ -37,6 +37,9 @@
     <Reference Include="Assembly-CSharp.Base.mm">
       <HintPath>..\..\CustomCharacters\CustomCharacters\bin\Debug\Assembly-CSharp.Base.mm.dll</HintPath>
     </Reference>
+    <Reference Include="Ionic.Zip">
+      <HintPath>D:\SteamLibrary\steamapps\common\Enter the Gungeon\EtG_Data\Managed\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="MonoMod.RuntimeDetour">
       <HintPath>..\..\Semi\Semi\Semi\bin\Debug\MonoMod.RuntimeDetour.dll</HintPath>
     </Reference>

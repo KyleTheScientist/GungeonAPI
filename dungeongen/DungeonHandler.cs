@@ -35,7 +35,7 @@ namespace GungeonAPI
         public static void OnPreDungeonGen(LoopDungeonGenerator generator, Dungeon dungeon, DungeonFlow flow, int dungeonSeed)
         {
             Tools.Print("Attempting to override floor layout...", "5599FF");
-            CollectDataForAnalysis(flow, dungeon);
+            //CollectDataForAnalysis(flow, dungeon);
             if (flow.name != "Foyer Flow" && !GameManager.IsReturningToFoyerWithPlayer)
             {
                 if (debugFlow)

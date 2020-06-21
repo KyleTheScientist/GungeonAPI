@@ -131,7 +131,7 @@ namespace GungeonAPI
             return (T)Enum.Parse(typeof(T), val.ToUpper());
         }
 
-        public static void LogPropertiesAndFields<T>(T obj, string header = "")
+        public static void LogPropertiesAndFields<T>(this T obj, string header = "")
         {
             Log(header);
             Log("=======================");
