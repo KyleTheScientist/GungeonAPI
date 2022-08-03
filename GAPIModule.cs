@@ -13,7 +13,7 @@ namespace GungeonAPI
     {
         public const string GUID = "kyle.etg.gapi";
         public const string NAME = "Custom Rooms";
-        public const string VERSION = "1.0.2";
+        public const string VERSION = "1.0.1";
         public void Start()
         {
             ETGModMainBehaviour.WaitForGameManagerStart(GMStart);
