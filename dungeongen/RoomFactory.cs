@@ -9,7 +9,6 @@ using Dungeonator;
 using Random = UnityEngine.Random;
 using CustomShrineController = GungeonAPI.ShrineFactory.CustomShrineController;
 using FloorType = Dungeonator.CellVisualData.CellFloorType;
-using Ionic.Zip;
 
 namespace GungeonAPI
 {
@@ -22,36 +21,17 @@ namespace GungeonAPI
         private static RoomEventDefinition sealOnEnterWithEnemies = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENTER_WITH_ENEMIES, RoomEventTriggerAction.SEAL_ROOM);
         private static RoomEventDefinition unsealOnRoomClear = new RoomEventDefinition(RoomEventTriggerCondition.ON_ENEMIES_CLEARED, RoomEventTriggerAction.UNSEAL_ROOM);
 
-        public static string RoomDirectory()
+        public static void LoadRoomsFromRoomDirectory(string path)
         {
-            return Path.GetFullPath(Path.Combine(ETGMod.GameFolder, "CustomRoomData")) + Path.DirectorySeparatorChar;
-        }
-
-        public static void LoadRoomsFromRoomDirectory()
-        {
-            string roomDirectory = RoomDirectory();
-            Directory.CreateDirectory(roomDirectory);
-            foreach (string f in Directory.GetFiles(roomDirectory, "*", SearchOption.AllDirectories))
+            foreach (string f in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
             {
                 if (f.EndsWith(".room", StringComparison.OrdinalIgnoreCase))
                 {
-                    string name = Path.GetFullPath(f).RemovePrefix(roomDirectory).RemoveSuffix(".room");
+                    string name = Path.GetFullPath(f).RemovePrefix(path).RemoveSuffix(".room");
                     Tools.Log($"Found room: \"{name}\"");
                     var roomData = BuildFromRoomFile(f);
                     DungeonHandler.Register(roomData);
                     rooms.Add(name, roomData);
-                }
-                else if (f.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                {
-                    Tools.Log($"Found zipped rooms: \"{f}\"");
-                    var roomsData = BuildFromZipFile(f);
-                    foreach (var roomData in roomsData)
-                    {
-                        string name = roomData.room.name;
-                        Tools.Log($"Found room: \"{name}\"");
-                        DungeonHandler.Register(roomData);
-                        rooms.Add(roomData.room.name, roomData);
-                    }
                 }
             }
         }
@@ -64,44 +44,6 @@ namespace GungeonAPI
             roomData.room = Build(texture, roomData);
             return roomData;
         }
-
-        public static IEnumerable<RoomData> BuildFromZipFile(string zipFilePath)
-        {
-            if (!ZipFile.IsZipFile(zipFilePath))
-            {
-                Tools.Log($"Not a valid zip file!");
-                yield break;
-            }
-
-            using (var zipFile = ZipFile.Read(zipFilePath))
-            {
-                foreach (var entry in zipFile.Entries)
-                {
-                    var fileName = Path.GetFileNameWithoutExtension(entry.FileName);
-                    var extension = Path.GetExtension(entry.FileName);
-                    if (!string.Equals(extension, ".room", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    byte[] zipData;
-                    int capacity = (int)entry.UncompressedSize;
-                    if (capacity < 0)
-                        continue;
-
-                    using (var ms = new MemoryStream(capacity))
-                    {
-                        entry.Extract(ms);
-                        zipData = ms.ToArray();
-                    }
-
-                    var texture = ResourceExtractor.BytesToTexture(zipData, fileName);
-                    var roomData = ExtractRoomDataFromBytes(zipData);
-                    roomData.room = Build(texture, roomData);
-
-                    yield return roomData;
-                }
-            }
-        }
-
         public static RoomData BuildFromResource(string roomPath)
         {
             var texture = ResourceExtractor.GetTextureFromResource(roomPath);

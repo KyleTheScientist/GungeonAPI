@@ -3,22 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using BepInEx;
 
 namespace GungeonAPI
 {
-    public class GAPIModule : ETGModule
+    [BepInDependency("etgmodding.etg.mtgapi")]
+    [BepInPlugin(GUID, NAME, VERSION)]
+    public class GAPIModule : BaseUnityPlugin
     {
-        public static readonly string VERSION = "v0.2.0";
-
-        public override void Exit()
+        public const string GUID = "kyle.etg.gapi";
+        public const string NAME = "Custom Rooms";
+        public const string VERSION = "1.0.1";
+        public void Start()
         {
+            ETGModMainBehaviour.WaitForGameManagerStart(GMStart);
         }
-
-        public override void Init()
-        {
-        }
-
-        public override void Start()
+        public void GMStart(GameManager g)
         {
             try
             {

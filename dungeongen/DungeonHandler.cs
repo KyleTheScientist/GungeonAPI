@@ -12,6 +12,8 @@ using RoomCategory = PrototypeDungeonRoom.RoomCategory;
 using RoomNormalSubCategory = PrototypeDungeonRoom.RoomNormalSubCategory;
 using RoomBossSubCategory = PrototypeDungeonRoom.RoomBossSubCategory;
 using RoomSpecialSubCategory = PrototypeDungeonRoom.RoomSpecialSubCategory;
+using System.IO;
+
 namespace GungeonAPI
 {
 
@@ -26,7 +28,11 @@ namespace GungeonAPI
         {
             if (!initialized)
             {
-                RoomFactory.LoadRoomsFromRoomDirectory();
+                var dirs = Directory.GetDirectories(BepInEx.Paths.PluginPath, "CustomRoomData", SearchOption.AllDirectories);
+                foreach (var dir in dirs)
+                {
+                    RoomFactory.LoadRoomsFromRoomDirectory(dir);
+                }
                 DungeonHooks.OnPreDungeonGeneration += OnPreDungeonGen;
                 initialized = true;
             }
