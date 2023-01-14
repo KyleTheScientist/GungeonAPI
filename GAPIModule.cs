@@ -8,12 +8,13 @@ using BepInEx;
 namespace GungeonAPI
 {
     [BepInDependency("etgmodding.etg.mtgapi")]
+    [BepInDependency("alexandria.etgmod.alexandria")]
     [BepInPlugin(GUID, NAME, VERSION)]
     public class GAPIModule : BaseUnityPlugin
     {
         public const string GUID = "kyle.etg.gapi";
         public const string NAME = "Custom Rooms";
-        public const string VERSION = "1.0.1";
+        public const string VERSION = "1.0.2";
         public void Start()
         {
             ETGModMainBehaviour.WaitForGameManagerStart(GMStart);
