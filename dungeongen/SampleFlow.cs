@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using Dungeonator;
 using Random = UnityEngine.Random;
+using Alexandria.DungeonAPI;
 
 namespace GungeonAPI
 {

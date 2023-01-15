@@ -7,12 +7,13 @@ using UnityEngine;
 using Dungeonator;
 using Random = UnityEngine.Random;
 using CustomShrineData = GungeonAPI.ShrineFactory.CustomShrineController;
-using RoomData = GungeonAPI.RoomFactory.RoomData;
+using RoomData = Alexandria.DungeonAPI.RoomFactory.RoomData;
 using RoomCategory = PrototypeDungeonRoom.RoomCategory;
 using RoomNormalSubCategory = PrototypeDungeonRoom.RoomNormalSubCategory;
 using RoomBossSubCategory = PrototypeDungeonRoom.RoomBossSubCategory;
 using RoomSpecialSubCategory = PrototypeDungeonRoom.RoomSpecialSubCategory;
 using System.IO;
+using Alexandria.DungeonAPI;
 
 namespace GungeonAPI
 {
@@ -31,7 +32,7 @@ namespace GungeonAPI
                 var dirs = Directory.GetDirectories(BepInEx.Paths.PluginPath, "CustomRoomData", SearchOption.AllDirectories);
                 foreach (var dir in dirs)
                 {
-                    RoomFactory.LoadRoomsFromRoomDirectory(dir);
+                    RoomFactory.LoadRoomsFromRoomDirectory("CustomRoomsMod",dir);
                 }
                 DungeonHooks.OnPreDungeonGeneration += OnPreDungeonGen;
                 initialized = true;
