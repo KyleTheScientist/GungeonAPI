@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Alexandria.Misc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,10 +15,10 @@ namespace GungeonAPI
         public static void DisplayHitbox(SpeculativeRigidbody speculativeRigidbody)
         {
             PixelCollider collider = speculativeRigidbody.HitboxPixelCollider;
-            Tools.Log("Collider Found...");
+            DebugUtility.Log("Collider Found...");
             if (!speculativeRigidbody.gameObject.GetComponent<HitBoxDisplay>())
                 speculativeRigidbody.gameObject.AddComponent<HitBoxDisplay>();
-            Tools.Log("Displaying...");
+            DebugUtility.Log("Displaying...");
             LogHitboxInfo(collider);
         }
 
@@ -76,8 +77,8 @@ namespace GungeonAPI
 
         private static void LogHitboxInfo(PixelCollider collider)
         {
-            Tools.Print($"Dimensions: ({collider.Dimensions.x},{collider.Dimensions.y})");
-            Tools.Print($"Offset: ({collider.Offset.x},{collider.Offset.y})");
+            DebugUtility.Print($"Dimensions: ({collider.Dimensions.x},{collider.Dimensions.y})");
+            DebugUtility.Print($"Offset: ({collider.Offset.x},{collider.Offset.y})");
         }
     }
 }

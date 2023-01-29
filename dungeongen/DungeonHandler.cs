@@ -29,11 +29,7 @@ namespace GungeonAPI
         {
             if (!initialized)
             {
-                var dirs = Directory.GetDirectories(BepInEx.Paths.PluginPath, "CustomRoomData", SearchOption.AllDirectories);
-                foreach (var dir in dirs)
-                {
-                    RoomFactory.LoadRoomsFromRoomDirectory("CustomRoomsMod",dir);
-                }
+
                 DungeonHooks.OnPreDungeonGeneration += OnPreDungeonGen;
                 initialized = true;
             }

@@ -5,6 +5,8 @@ using System.Text;
 using UnityEngine;
 using Dungeonator;
 using Alexandria.DungeonAPI;
+using Alexandria.ItemAPI;
+using Alexandria.Misc;
 
 namespace GungeonAPI
 {
@@ -60,7 +62,7 @@ namespace GungeonAPI
             {
                 //Get texture and create sprite
                 Texture2D tex = ResourceExtractor.GetTextureFromResource(spritePath);
-                var shrine = ItemAPI.SpriteBuilder.SpriteFromResource(spritePath, null, false);
+                var shrine = SpriteBuilder.SpriteFromResource(spritePath, null);
 
                 //Add (hopefully) unique ID to shrine for tracking
                 string ID = $"{modID}:{name}".ToLower().Replace(" ", "_");
@@ -83,7 +85,7 @@ namespace GungeonAPI
                     colliderOffset = new IntVector2(0, 0);
                     colliderSize = new IntVector2(spriteDimensions.x, spriteDimensions.y / 2);
                 }
-                var body = ItemAPI.SpriteBuilder.SetUpSpeculativeRigidbody(sprite, colliderOffset, colliderSize);
+                var body = SpriteBuilder.SetUpSpeculativeRigidbody(sprite, colliderOffset, colliderSize);
 
                 var data = shrine.AddComponent<CustomShrineController>();
                 data.ID = ID;
@@ -132,12 +134,12 @@ namespace GungeonAPI
 
 
                 builtShrines.Add(ID, prefab);
-                Tools.Print("Added shrine: " + ID);
+                DebugUtility.Print("Added shrine: " + ID);
                 return shrine;
             }
             catch (Exception e)
             {
-                Tools.PrintException(e);
+                DebugUtility.PrintException(e);
                 return null;
             }
         }
@@ -189,7 +191,7 @@ namespace GungeonAPI
         private static void PlaceBreachShrines()
         {
             if (m_builtShrines) return;
-            Tools.Print("Placing breach shrines: ");
+            DebugUtility.Print("Placing breach shrines: ");
             foreach (var prefab in builtShrines.Values)
             {
                 try
@@ -197,7 +199,7 @@ namespace GungeonAPI
                     var prefabShrineData = prefab.GetComponent<CustomShrineController>();
                     if (!prefabShrineData.isBreachShrine) continue;
 
-                    Tools.Print($"    {prefab.name}");
+                    DebugUtility.Print($"    {prefab.name}");
                     var shrine = GameObject.Instantiate(prefab).GetComponent<CustomShrineController>();
                     shrine.Copy(prefabShrineData);
                     shrine.gameObject.SetActive(true);
@@ -214,7 +216,7 @@ namespace GungeonAPI
                 }
                 catch (Exception e)
                 {
-                    Tools.PrintException(e);
+                    DebugUtility.PrintException(e);
                 }
             }
             m_builtShrines = true;
@@ -243,7 +245,7 @@ namespace GungeonAPI
                 if (ShrineFactory.builtShrines.ContainsKey(id))
                     Copy(ShrineFactory.builtShrines[id].GetComponent<CustomShrineController>());
                 else
-                    Tools.PrintError($"Was this shrine registered correctly?: {id}");
+                    DebugUtility.PrintError($"Was this shrine registered correctly?: {id}");
 
                 this.GetComponent<SimpleInteractable>().OnAccept = OnAccept;
                 this.GetComponent<SimpleInteractable>().OnDecline = OnDecline;

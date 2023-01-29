@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using BepInEx;
+using Alexandria.DungeonAPI;
+using Alexandria.Misc;
 
 namespace GungeonAPI
 {
@@ -32,7 +34,7 @@ namespace GungeonAPI
                     DungeonHandler.debugFlow = !DungeonHandler.debugFlow;
                     string status = DungeonHandler.debugFlow ? "enabled" : "disabled";
                     string color = DungeonHandler.debugFlow ? "00FF00" : "FF0000";
-                    Tools.Print($"Debug flow {status}", color, true);
+                    DebugUtility.Print($"Debug flow {status}", color, true);
                 });
 
                 //This is useful for figuring out where you want your shrine to go in the breach
@@ -45,14 +47,14 @@ namespace GungeonAPI
                 ETGModConsole.Commands.AddUnit("dissectshrine", (args) =>
                 {
                     var c = GetClosestCustomShrineObject();
-                    Tools.BreakdownComponents(c);
-                    Tools.LogPropertiesAndFields(c.GetComponent<SimpleInteractable>());
+                    DebugUtility.BreakdownComponents(c);
+                    DebugUtility.LogPropertiesAndFields(c.GetComponent<SimpleInteractable>());
                 });
 
                 ETGModConsole.Commands.AddUnit("roomname", (args) =>
                 {
                     var room = GameManager.Instance.PrimaryPlayer.CurrentRoom;
-                    Tools.Print(room.GetRoomName());
+                    DebugUtility.Print(room.GetRoomName());
                 });
 
                 ETGModConsole.Commands.AddUnit("hidehitboxes", (args) => HitboxMonitor.DeleteHitboxDisplays());
@@ -62,43 +64,43 @@ namespace GungeonAPI
                     {
                         if (obj && obj.sprite && Vector2.Distance(obj.sprite.WorldCenter, GameManager.Instance.PrimaryPlayer.sprite.WorldCenter) < 8)
                         {
-                            Tools.Log(obj?.name);
+                            DebugUtility.Log(obj?.name);
                             HitboxMonitor.DisplayHitbox(obj);
                         }
                     }
                 });
 
-                Tools.Print($"Custom Rooms {VERSION} loaded.", "FF00FF", true);
+                DebugUtility.Print($"Custom Rooms {VERSION} loaded.", "FF00FF", true);
             }
             catch (Exception e)
             {
-                Tools.Print("Failed to load Custom Rooms Mod", "FF0000", true);
-                Tools.PrintException(e);
+                DebugUtility.Print("Failed to load Custom Rooms Mod", "FF0000", true);
+                DebugUtility.PrintException(e);
             }
         }
 
         public void DumpEnemyDatabase()
         {
-            Tools.Print("Dumping enemy database.");
+            DebugUtility.Print("Dumping enemy database.");
             for (int i = 0; i < EnemyDatabase.Instance.Entries.Count; i++)
             {
                 var entry = EnemyDatabase.Instance.Entries[i];
-                Tools.Log($"{entry.myGuid}\t{entry.name}\t{i}\t{entry.isNormalEnemy}\t{entry.isInBossTab}", "EnemyDump.txt");
+                DebugUtility.Log($"{entry.myGuid}\t{entry.name}\t{i}\t{entry.isNormalEnemy}\t{entry.isInBossTab}", "EnemyDump.txt");
             }
         }
         public static GameObject GetClosestCustomShrineObject()
         {
-            Tools.Log("a");
+            DebugUtility.Log("a");
             var player = GameManager.Instance.PrimaryPlayer;
-            Tools.Log("b");
+            DebugUtility.Log("b");
 
             var shrines = GameObject.FindObjectsOfType<ShrineFactory.CustomShrineController>();
-            Tools.Log("c");
+            DebugUtility.Log("c");
             float dist = float.MaxValue, d;
             ShrineFactory.CustomShrineController closest = null;
             foreach (var shrine in shrines)
             {
-                Tools.Log("d");
+                DebugUtility.Log("d");
                 try
                 {
                     d = Vector2.Distance(shrine.sprite.WorldCenter, player.sprite.WorldCenter);
@@ -110,24 +112,24 @@ namespace GungeonAPI
                 }
                 catch { }
             }
-            Tools.Log("e");
-            Tools.Log(closest);
+            DebugUtility.Log("e");
+            DebugUtility.Log(closest);
             return closest.gameObject;
         }
 
         public static GameObject GetClosestShrineObject()
         {
-            Tools.Log("a");
+            DebugUtility.Log("a");
             var player = GameManager.Instance.PrimaryPlayer;
-            Tools.Log("b");
+            DebugUtility.Log("b");
 
             var talkers = GameObject.FindObjectsOfType<AdvancedShrineController>();
-            Tools.Log("c");
+            DebugUtility.Log("c");
             float dist = float.MaxValue, d;
             AdvancedShrineController closest = null;
             foreach (var talker in talkers)
             {
-                Tools.Log("d");
+                DebugUtility.Log("d");
                 try
                 {
                     d = Vector2.Distance(talker.sprite.WorldCenter, player.sprite.WorldCenter);
@@ -139,8 +141,8 @@ namespace GungeonAPI
                 }
                 catch { }
             }
-            Tools.Log("e");
-            Tools.Log(closest);
+            DebugUtility.Log("e");
+            DebugUtility.Log(closest);
             return closest.gameObject;
         }
     }
