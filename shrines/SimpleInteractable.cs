@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Alexandria.Misc;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace GungeonAPI
             if (TextBoxManager.HasTextBox(this.talkPoint))
                 return;
 
-            Tools.Print("Can use: " + (CanUse == null));
+            DebugUtility.Print("Can use: " + (CanUse == null));
             m_canUse = CanUse != null ? CanUse.Invoke(interactor, this.gameObject) : m_canUse;
             StartCoroutine(this.HandleConversation(interactor));
         }
